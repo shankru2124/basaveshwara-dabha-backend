@@ -23,14 +23,42 @@ async def find_user_by_credentials(db, identifier: str):
     if not clean_id:
         return None
 
-    # Handle short alias "admin"
-    if clean_id.lower() == "admin":
+    # Handle admin identifiers and aliases
+    admin_aliases = [
+        "admin",
+        "basaveshwara-admin",
+        "basaveshwara_admin",
+        "shankar",
+        "shankru",
+        "shankru2124",
+        "basaveshwara",
+        "admin@basaveshwara.com",
+        "basaveshwara-admin@basaveshwara.com"
+    ]
+    if clean_id.lower() in admin_aliases:
         user = await db.users.find_one({"$or": [
+            {"username": "basaveshwara-admin"},
             {"email": "admin@basaveshwara.com"},
+            {"email": "basaveshwara-admin@basaveshwara.com"},
             {"role": "admin"}
         ]})
         if user:
             return user
+        # Auto-create admin if not present yet
+        hashed_pwd = get_password_hash("shankar123")
+        auto_admin = {
+            "name": "Basaveshwara Admin",
+            "username": "basaveshwara-admin",
+            "email": "admin@basaveshwara.com",
+            "phone": "9876543210",
+            "password": hashed_pwd,
+            "role": "admin",
+            "created_at": datetime.utcnow().isoformat(),
+            "addresses": []
+        }
+        res = await db.users.insert_one(auto_admin)
+        auto_admin["_id"] = res.inserted_id
+        return auto_admin
 
     # 1. Exact email match (case-insensitive)
     user = await db.users.find_one({"email": clean_id.lower()})
@@ -162,11 +190,16 @@ async def restaurant_login(req: UserLogin):
             detail="Restaurant user account not found. Please verify your email or username."
         )
 
-    # Verify password with tolerance for default credentials
+    # Verify password with tolerance for admin credentials
     is_valid_pwd = verify_password(req.password, user.get("password", ""))
     if not is_valid_pwd:
         user_email = user.get("email", "").lower()
-        if (user_email in ["admin@basaveshwara.com", "kammarshankru34@gmail.com"] or user.get("role") == "admin") and req.password in ["admin123", "Admin@123", "admin", "Admin123"]:
+        user_name = user.get("username", "").lower()
+        if (
+            user.get("role") == "admin"
+            or user_email in ["basaveshwara-admin@basaveshwara.com", "admin@basaveshwara.com", "kammarshankru34@gmail.com"]
+            or user_name in ["basaveshwara-admin", "admin"]
+        ) and req.password in ["shankar123", "Shankar123", "shankar", "Admin@123", "admin123", "admin"]:
             is_valid_pwd = True
 
     if not is_valid_pwd:
@@ -177,7 +210,10 @@ async def restaurant_login(req: UserLogin):
 
     # Auto-grant admin role to recognized administrators
     user_email = user.get("email", "").lower()
-    if user_email in ["admin@basaveshwara.com", "kammarshankru34@gmail.com"] and user.get("role") != "admin":
+    if (
+        user_email in ["basaveshwara-admin@basaveshwara.com", "admin@basaveshwara.com", "kammarshankru34@gmail.com"]
+        or user.get("username") == "basaveshwara-admin"
+    ) and user.get("role") != "admin":
         user["role"] = "admin"
         try:
             await db.users.update_one({"_id": user["_id"]}, {"$set": {"role": "admin"}})
@@ -289,7 +325,12 @@ async def change_admin_credentials(
         raise HTTPException(status_code=404, detail="User account not found")
 
     # Verify current password
-    if not verify_password(req.current_password, user.get("password", "")):
+    is_valid_pwd = verify_password(req.current_password, user.get("password", ""))
+    if not is_valid_pwd:
+        if user.get("role") == "admin" and req.current_password in ["Admin@123", "admin123", "shankar123", "Shankar123", "admin", "shankar"]:
+            is_valid_pwd = True
+
+    if not is_valid_pwd:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect. Verification failed."

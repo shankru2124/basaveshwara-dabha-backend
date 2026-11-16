@@ -1,5 +1,8 @@
+import os
+import asyncio
 import logging
 from contextlib import asynccontextmanager
+import httpx
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -17,14 +20,35 @@ logging.basicConfig(
 )
 logger = logging.getLogger("basaveshwara.main")
 
+async def render_keepalive_worker():
+    """
+    Prevents Render from sleeping by sending an automated HTTP ping every 8 minutes.
+    Render free tier sleeps after 15 minutes of inactivity; this keeps it awake 24/7.
+    """
+    await asyncio.sleep(25)  # Initial delay for app binding
+    raw_url = os.environ.get("RENDER_EXTERNAL_URL", "https://basaveshwara-dabha-backend.onrender.com")
+    health_url = f"{raw_url.rstrip('/')}/health"
+    logger.info(f"Keep-alive 24/7 worker activated for {health_url}")
+
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        while True:
+            try:
+                await asyncio.sleep(8 * 60)  # Ping every 8 minutes
+                res = await client.get(health_url)
+                logger.info(f"Keep-alive self-ping sent -> HTTP {res.status_code}")
+            except Exception as e:
+                logger.debug(f"Keep-alive ping notice: {e}")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Basaveshwara Dabha API server...")
     await db_manager.connect()
     await seed_initial_data()
+    keepalive_task = asyncio.create_task(render_keepalive_worker())
     yield
     # Shutdown
+    keepalive_task.cancel()
     logger.info("Shutting down Basaveshwara Dabha API server...")
     await db_manager.close()
 

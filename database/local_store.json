@@ -4,11 +4,12 @@
       "name": "Basaveshwara Admin",
       "email": "admin@basaveshwara.com",
       "phone": "9876543210",
-      "password": "$2b$12$bofYT6yop.BErGmtpLHpQucDk7dOoC2I.puNqF4ftObTjpR4vIf46",
+      "password": "$2b$12$sbQu1qbtsfklItQsxqCcFeTiACYRmIyigFlDXWd309t9ZhPW8ffIW",
       "role": "admin",
       "created_at": "2026-11-14T17:49:06.344767",
       "addresses": [],
-      "_id": "6af89f12b1d94bc1220113fc"
+      "_id": "6af89f12b1d94bc1220113fc",
+      "username": "basaveshwara-admin"
     },
     {
       "name": "Ramesh Kumar",

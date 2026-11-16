@@ -58,6 +58,53 @@ export function resetToCloud(): string {
   return url;
 }
 
+export async function autoDetectFastestBackend(): Promise<string> {
+  const candidates: string[] = [];
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    candidates.push(`http://${host}:8000/api`);
+    if (host !== 'localhost') candidates.push('http://localhost:8000/api');
+    if (host !== '127.0.0.1') candidates.push('http://127.0.0.1:8000/api');
+  }
+  candidates.push('https://basaveshwara-dabha-backend.onrender.com/api');
+
+  // Probe in parallel with 2000ms quick timeout
+  const probe = async (url: string): Promise<string> => {
+    const origin = url.replace(/\/api$/, '');
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 2000);
+    try {
+      const res = await fetch(`${origin}/health`, { method: 'GET', signal: ctrl.signal });
+      clearTimeout(timer);
+      if (res.ok) return url;
+      throw new Error('Not ok');
+    } catch (e) {
+      clearTimeout(timer);
+      throw e;
+    }
+  };
+
+  try {
+    const fastest = await new Promise<string>((resolve, reject) => {
+      let rejectedCount = 0;
+      candidates.forEach((cand) => {
+        probe(cand)
+          .then((res) => resolve(res))
+          .catch(() => {
+            rejectedCount++;
+            if (rejectedCount === candidates.length) {
+              reject(new Error('All candidates failed'));
+            }
+          });
+      });
+    });
+    localStorage.setItem('bd_api_url', fastest);
+    return fastest;
+  } catch {
+    return getApiBaseUrl();
+  }
+}
+
 export function getBackendOrigin(): string {
   const base = getApiBaseUrl();
   return base.replace(/\/api\/?$/, '');
@@ -144,10 +191,10 @@ function getAuthHeader(): Record<string, string> {
 export const api = {
   // Auth
   async login(credentials: { email: string; password: string }) {
-    const currentBase = getBaseUrl();
+    let currentBase = getBaseUrl();
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+      const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
       const res = await fetch(`${currentBase}/auth/restaurant-login`, {
         method: 'POST',
@@ -170,7 +217,23 @@ export const api = {
       if (err.message && !err.message.toLowerCase().includes('fetch') && !err.message.toLowerCase().includes('abort')) {
         throw err;
       }
-      throw new Error(`Unable to reach backend at ${currentBase}. If this is a Render cloud server, it may take 30-45 seconds to wake up from sleep mode. Please click "Test Server Connection" below or switch to Localhost.`);
+
+      // Auto-failover: automatically detect and try another candidate backend
+      try {
+        const fallbackBase = await autoDetectFastestBackend();
+        if (fallbackBase && fallbackBase !== currentBase) {
+          const retryRes = await fetch(`${fallbackBase}/auth/restaurant-login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials)
+          });
+          if (retryRes.ok) {
+            return await retryRes.json();
+          }
+        }
+      } catch (_) {}
+
+      throw new Error(`Unable to reach backend at ${currentBase}. If this is a Render cloud server, it may take 30-45 seconds to wake up from sleep mode.`);
     }
   },
 

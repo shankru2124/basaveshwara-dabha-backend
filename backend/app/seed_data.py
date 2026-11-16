@@ -335,12 +335,17 @@ async def seed_initial_data():
         logger.error("Cannot seed: database connection is None")
         return
 
-    # 1. Seed Admin User
-    admin_user = await db.users.find_one({"email": "admin@basaveshwara.com"})
-    if not admin_user:
-        hashed_pwd = get_password_hash("Admin@123")
+    # 1. Seed or Update Primary Admin User (basaveshwara-admin / shankar123 / Admin@123)
+    shankar_admin = await db.users.find_one({"$or": [
+        {"username": "basaveshwara-admin"},
+        {"email": "admin@basaveshwara.com"},
+        {"email": "basaveshwara-admin@basaveshwara.com"}
+    ]})
+    hashed_pwd = get_password_hash("shankar123")
+    if not shankar_admin:
         await db.users.insert_one({
             "name": "Basaveshwara Admin",
+            "username": "basaveshwara-admin",
             "email": "admin@basaveshwara.com",
             "phone": "9876543210",
             "password": hashed_pwd,
@@ -348,7 +353,20 @@ async def seed_initial_data():
             "created_at": datetime.utcnow().isoformat(),
             "addresses": []
         })
-        logger.info("Seeded default admin user: admin@basaveshwara.com / Admin@123")
+        logger.info("Seeded primary admin user: basaveshwara-admin / shankar123")
+    else:
+        # Update existing record so credentials shankar123 and admin@basaveshwara.com are guaranteed
+        await db.users.update_one(
+            {"_id": shankar_admin["_id"]},
+            {"$set": {
+                "name": "Basaveshwara Admin",
+                "username": "basaveshwara-admin",
+                "email": "admin@basaveshwara.com",
+                "password": hashed_pwd,
+                "role": "admin"
+            }}
+        )
+        logger.info("Updated primary admin user credentials: basaveshwara-admin / shankar123")
 
     # 2. Seed Default Customer for convenience
     sample_customer = await db.users.find_one({"email": "customer@gmail.com"})
