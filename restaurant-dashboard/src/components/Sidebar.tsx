@@ -29,8 +29,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { admin } = useAdminAuth();
 
   const navItems = [
-    { id: 'settings', label: 'Display & Header Settings', icon: Settings },
-    { id: 'menu', label: 'Food Menu Management', icon: UtensilsCrossed },
+    { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard },
     {
       id: 'live_orders',
       label: 'Live Kitchen Orders',
@@ -38,12 +37,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: pendingOrderCount > 0 ? pendingOrderCount : undefined,
       badgeColor: 'bg-red-500'
     },
-    { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard },
+    { id: 'menu', label: 'Food Menu Management', icon: UtensilsCrossed },
     { id: 'categories', label: 'Category Management', icon: Layers },
     { id: 'orders_history', label: 'Order History Archive', icon: History },
     { id: 'customers', label: 'Customer Directory', icon: Users },
     { id: 'coupons', label: 'Coupons & Promos', icon: Tag },
     { id: 'analytics', label: 'Reports & Analytics', icon: BarChart3 },
+    { id: 'settings', label: 'Restaurant Settings', icon: Settings },
     { id: 'security', label: 'Admin Security', icon: ShieldCheck },
   ];
 

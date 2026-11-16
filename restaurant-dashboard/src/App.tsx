@@ -29,7 +29,7 @@ import { BellRing, VolumeX, ArrowRight } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { isAuthenticated } = useAdminAuth();
-  const [currentTab, setCurrentTab] = useState<string>('settings');
+  const [currentTab, setCurrentTab] = useState<string>('overview');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
   // Global State pre-seeded with full defaults so editable options and controls are immediately visible

@@ -26,10 +26,10 @@ export const Header: React.FC<HeaderProps> = ({
   pendingOrderCount
 }) => {
   const quickNav = [
-    { id: 'settings', label: 'Display & Header Settings', icon: Settings },
-    { id: 'menu', label: 'Food Menu', icon: UtensilsCrossed },
-    { id: 'live_orders', label: 'Live Orders', icon: BellRing, badge: pendingOrderCount > 0 ? pendingOrderCount : undefined },
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'live_orders', label: 'Live Orders', icon: BellRing, badge: pendingOrderCount > 0 ? pendingOrderCount : undefined },
+    { id: 'menu', label: 'Food Menu', icon: UtensilsCrossed },
+    { id: 'settings', label: 'Restaurant Settings', icon: Settings },
     { id: 'categories', label: 'Categories', icon: Layers },
     { id: 'orders_history', label: 'Order History', icon: History },
   ];
