@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Minus, Trash2, Tag, ArrowRight, ShoppingBag, ShieldCheck, Bike, Store } from 'lucide-react';
+import { X, Plus, Minus, Trash2, Tag, ArrowRight, ArrowLeft, ShoppingBag, ShieldCheck, Bike, Store } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { FulfillmentType } from '../types';
 
@@ -44,23 +44,30 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onCheckout, onExploreMen
   const canProceed = calculation?.can_place_order && items.length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-[70] overflow-hidden">
       {/* Backdrop */}
       <div
         onClick={() => setIsCartOpen(false)}
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
       ></div>
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
+      <div className="fixed inset-y-0 right-0 w-full sm:max-w-md flex">
+        <div className="w-full h-full bg-white shadow-2xl flex flex-col justify-between overflow-hidden">
           {/* Header */}
-          <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold">
+          <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => setIsCartOpen(false)}
+                className="p-1.5 -ml-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full sm:hidden transition"
+                title="Back to menu"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold">
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="font-extrabold text-gray-900 text-lg">My Food Cart</h2>
+                <h2 className="font-extrabold text-gray-900 text-base sm:text-lg">My Food Cart</h2>
                 <p className="text-xs text-gray-500">{totalItemCount} {totalItemCount === 1 ? 'item' : 'items'} selected</p>
               </div>
             </div>
@@ -298,14 +305,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onCheckout, onExploreMen
 
           {/* Footer CTA */}
           {items.length > 0 && (
-            <div className="p-4 sm:p-5 border-t border-gray-100 bg-white sticky bottom-0">
+            <div className="p-4 sm:p-5 border-t border-gray-100 bg-white sticky bottom-0 z-20 pb-safe shadow-[0_-4px_25px_rgba(0,0,0,0.08)] shrink-0">
               <button
                 disabled={!canProceed || isCalculating}
                 onClick={() => {
                   setIsCartOpen(false);
                   onCheckout();
                 }}
-                className={`w-full py-3.5 px-4 rounded-xl flex items-center justify-between text-white font-extrabold text-sm transition shadow-lg ${
+                className={`w-full py-3.5 px-4 rounded-2xl flex items-center justify-between text-white font-extrabold text-sm transition shadow-lg ${
                   canProceed && !isCalculating
                     ? 'bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 shadow-brand-500/30 active:scale-98'
                     : 'bg-gray-300 cursor-not-allowed shadow-none'
@@ -315,12 +322,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onCheckout, onExploreMen
                   <p className="text-[11px] text-brand-100 uppercase tracking-wider font-semibold">
                     {fulfillmentType === 'DELIVERY' ? 'Home Delivery' : 'Pickup at Counter'}
                   </p>
-                  <p className="font-black text-base">
+                  <p className="font-black text-lg">
                     ₹{calculation?.total_amount || 0}
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-xs">
-                  <span>Proceed to Checkout</span>
+                <div className="flex items-center gap-2 font-black uppercase tracking-wider text-xs bg-black/20 py-2 px-3.5 rounded-xl backdrop-blur-xs">
+                  <span>Proceed to Pay</span>
                   <ArrowRight className="w-4 h-4" />
                 </div>
               </button>

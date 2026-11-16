@@ -14,8 +14,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onNavigate,
   onOpenAuth
 }) => {
-  const { totalItemCount, setIsCartOpen } = useCart();
+  const { totalItemCount, setIsCartOpen, isCartOpen } = useCart();
   const { isAuthenticated } = useAuth();
+
+  // Hide mobile bottom bar when Cart is open so it never covers or obstructs the checkout button
+  if (isCartOpen) return null;
 
   const handleProfileClick = () => {
     if (isAuthenticated) {
