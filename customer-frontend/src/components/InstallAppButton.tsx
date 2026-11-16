@@ -82,14 +82,14 @@ export const InstallAppButton: React.FC<InstallAppButtonProps> = ({
 
     return (
       <>
-        <div className="bg-gradient-to-r from-orange-600 via-brand-600 to-amber-600 text-white px-4 py-2.5 shadow-md flex items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5">
+        <div className="bg-gradient-to-r from-orange-600 via-brand-600 to-amber-600 text-white px-3 sm:px-4 py-2.5 shadow-md flex items-center justify-between gap-2 sm:gap-3 text-xs w-full max-w-full overflow-hidden">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
               <Smartphone className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <p className="font-extrabold tracking-tight">Install Basaveshwara Dabha App</p>
-              <p className="text-[11px] text-orange-100 hidden sm:block">
+            <div className="min-w-0">
+              <p className="font-extrabold tracking-tight truncate">Install Basaveshwara Dabha App</p>
+              <p className="text-[11px] text-orange-100 hidden sm:block truncate">
                 Get faster food ordering and instant order tracking directly on your home screen!
               </p>
             </div>

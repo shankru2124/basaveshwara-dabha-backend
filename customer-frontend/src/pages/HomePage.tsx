@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, Sparkles, Clock, ShieldCheck, ArrowRight, Star, Flame, Utensils } from 'lucide-react';
 import { Category, MenuItem, RestaurantSettings } from '../types';
 import { FoodCard } from '../components/FoodCard';
+import { resolveImageUrl } from '../services/api';
 
 interface HomePageProps {
   categories: Category[];
@@ -35,7 +36,12 @@ export const HomePage: React.FC<HomePageProps> = ({
           {/* Authentic Logo Showcase */}
           <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto rounded-3xl overflow-hidden shadow-2xl ring-4 ring-amber-400/40 bg-black/40 hover:scale-105 transition-transform duration-300">
             <img
-              src={settings?.logo_url ? (settings.logo_url.startsWith('http') ? settings.logo_url : (settings.logo_url === '/logo.jpg' ? '/logo.jpg' : `http://localhost:8000${settings.logo_url}`)) : '/logo.jpg'}
+              src={resolveImageUrl(settings?.logo_url)}
+              onError={(e) => {
+                if (e.currentTarget.src !== window.location.origin + '/logo.jpg') {
+                  e.currentTarget.src = '/logo.jpg';
+                }
+              }}
               alt="Basaveshwara Dabha"
               className="w-full h-full object-cover"
             />

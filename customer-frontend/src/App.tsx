@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Home, UtensilsCrossed, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
 import { AuthModal } from './components/AuthModal';
 import { InstallAppButton } from './components/InstallAppButton';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { HomePage } from './pages/HomePage';
 import { MenuPage } from './pages/MenuPage';
 import { CheckoutPage } from './pages/CheckoutPage';
@@ -89,7 +89,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main View Router */}
-      <main className="flex-1 pb-16 md:pb-0">
+      <main className="flex-1 pb-24 md:pb-0">
         {currentPage === 'home' && (
           <HomePage
             categories={categories}
@@ -158,51 +158,12 @@ export const App: React.FC = () => {
         onClose={() => setIsAuthModalOpen(false)}
       />
 
-      {/* Mobile Bottom Navigation Bar (Swiggy / Zomato style) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 py-2 px-6 shadow-xl flex items-center justify-around">
-        <button
-          onClick={() => handleNavigate('home')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition ${
-            currentPage === 'home' ? 'text-brand-600' : 'text-gray-500 hover:text-gray-900'
-          }`}
-        >
-          <Home className="w-5 h-5" />
-          <span>Home</span>
-        </button>
-
-        <button
-          onClick={() => handleNavigate('menu')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition ${
-            currentPage === 'menu' ? 'text-brand-600' : 'text-gray-500 hover:text-gray-900'
-          }`}
-        >
-          <UtensilsCrossed className="w-5 h-5" />
-          <span>Menu</span>
-        </button>
-
-        <button
-          onClick={() => handleNavigate('orders')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition ${
-            currentPage === 'orders' ? 'text-brand-600' : 'text-gray-500 hover:text-gray-900'
-          }`}
-        >
-          <ShoppingBag className="w-5 h-5" />
-          <span>Orders</span>
-        </button>
-
-        <button
-          onClick={() => setIsCartOpen(true)}
-          className="relative flex flex-col items-center gap-1 text-[11px] font-bold text-gray-500 hover:text-gray-900 transition"
-        >
-          <ShoppingCart className="w-5 h-5" />
-          <span>Cart</span>
-          {totalItemCount > 0 && (
-            <span className="absolute -top-1 right-2 bg-brand-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-extrabold shadow-sm">
-              {totalItemCount}
-            </span>
-          )}
-        </button>
-      </div>
+      {/* Mobile Fixed Bottom Navigation Bar (Persistent while scrolling up/down) */}
+      <MobileBottomNav
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
+      />
     </div>
   );
 };

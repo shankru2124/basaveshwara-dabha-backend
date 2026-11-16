@@ -1,4 +1,62 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    const custom = localStorage.getItem('bd_api_url');
+    if (custom) return custom.replace(/\/+$/, '');
+  }
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:8000/api';
+  }
+  return 'https://basaveshwara-dabha-api.onrender.com/api';
+}
+
+export function setCustomApiUrl(url: string) {
+  if (!url) return;
+  let cleanUrl = url.trim().replace(/\/+$/, '');
+  if (!cleanUrl.endsWith('/api')) {
+    cleanUrl = `${cleanUrl}/api`;
+  }
+  localStorage.setItem('bd_api_url', cleanUrl);
+}
+
+export function getBackendOrigin(): string {
+  const base = getApiBaseUrl();
+  return base.replace(/\/api\/?$/, '');
+}
+
+export function getWsBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    const custom = localStorage.getItem('bd_ws_url');
+    if (custom) return custom.replace(/\/+$/, '');
+  }
+  if (import.meta.env.VITE_WS_URL) {
+    return import.meta.env.VITE_WS_URL.replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'ws://localhost:8000';
+  }
+  const origin = getBackendOrigin();
+  if (origin.startsWith('https://')) return origin.replace('https://', 'wss://');
+  if (origin.startsWith('http://')) return origin.replace('http://', 'ws://');
+  return 'wss://basaveshwara-dabha-api.onrender.com';
+}
+
+export function resolveImageUrl(url?: string | null): string {
+  if (!url) return '/logo.jpg';
+  if (url === '/logo.jpg' || url === 'logo.jpg') return '/logo.jpg';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const origin = getBackendOrigin();
+  if (url.startsWith('/')) {
+    return `${origin}${url}`;
+  }
+  return `${origin}/uploads/${url}`;
+}
+
+const getBaseUrl = () => getApiBaseUrl();
 
 function getAdminToken(): string | null {
   return localStorage.getItem('bd_admin_token');
@@ -12,7 +70,7 @@ function getAuthHeader(): Record<string, string> {
 export const api = {
   // Auth
   async login(credentials: { email: string; password: string }) {
-    const res = await fetch(`${BASE_URL}/auth/restaurant-login`, {
+    const res = await fetch(`${getBaseUrl()}/auth/restaurant-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials)
@@ -25,7 +83,7 @@ export const api = {
   },
 
   async getProfile() {
-    const res = await fetch(`${BASE_URL}/auth/me`, {
+    const res = await fetch(`${getBaseUrl()}/auth/me`, {
       headers: { ...getAuthHeader() }
     });
     if (!res.ok) throw new Error('Failed to verify session');
@@ -40,7 +98,7 @@ export const api = {
         query.append(k, String(v));
       }
     });
-    const res = await fetch(`${BASE_URL}/restaurant/orders?${query.toString()}`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/orders?${query.toString()}`, {
       headers: { ...getAuthHeader() }
     });
     if (!res.ok) throw new Error('Failed to fetch orders');
@@ -48,7 +106,7 @@ export const api = {
   },
 
   async getOrderById(orderId: string) {
-    const res = await fetch(`${BASE_URL}/restaurant/orders/${orderId}`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/orders/${orderId}`, {
       headers: { ...getAuthHeader() }
     });
     if (!res.ok) throw new Error('Order not found');
@@ -56,7 +114,7 @@ export const api = {
   },
 
   async updateOrderStatus(orderId: string, payload: { status: string; prep_time_minutes?: number; rejection_reason?: string; note?: string }) {
-    const res = await fetch(`${BASE_URL}/restaurant/orders/${orderId}/status`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/orders/${orderId}/status`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -73,7 +131,7 @@ export const api = {
 
   // Menu Items
   async getMenu() {
-    const res = await fetch(`${BASE_URL}/restaurant/menu`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/menu`, {
       headers: { ...getAuthHeader() }
     });
     if (!res.ok) throw new Error('Failed to fetch menu');
@@ -81,7 +139,7 @@ export const api = {
   },
 
   async createMenuItem(data: any) {
-    const res = await fetch(`${BASE_URL}/restaurant/menu`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/menu`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -97,7 +155,7 @@ export const api = {
   },
 
   async updateMenuItem(itemId: string, data: any) {
-    const res = await fetch(`${BASE_URL}/restaurant/menu/${itemId}`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/menu/${itemId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -113,7 +171,7 @@ export const api = {
   },
 
   async toggleItemAvailability(itemId: string, isAvailable: boolean) {
-    const res = await fetch(`${BASE_URL}/restaurant/menu/${itemId}/availability`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/menu/${itemId}/availability`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -126,7 +184,7 @@ export const api = {
   },
 
   async deleteMenuItem(itemId: string) {
-    const res = await fetch(`${BASE_URL}/restaurant/menu/${itemId}`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/menu/${itemId}`, {
       method: 'DELETE',
       headers: { ...getAuthHeader() }
     });
@@ -136,13 +194,13 @@ export const api = {
 
   // Categories
   async getCategories() {
-    const res = await fetch(`${BASE_URL}/menu/categories`);
+    const res = await fetch(`${getBaseUrl()}/menu/categories`);
     if (!res.ok) throw new Error('Failed to fetch categories');
     return res.json();
   },
 
   async createCategory(data: any) {
-    const res = await fetch(`${BASE_URL}/restaurant/categories`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/categories`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -155,7 +213,7 @@ export const api = {
   },
 
   async updateCategory(catId: string, data: any) {
-    const res = await fetch(`${BASE_URL}/restaurant/categories/${catId}`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/categories/${catId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -168,7 +226,7 @@ export const api = {
   },
 
   async deleteCategory(catId: string) {
-    const res = await fetch(`${BASE_URL}/restaurant/categories/${catId}`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/categories/${catId}`, {
       method: 'DELETE',
       headers: { ...getAuthHeader() }
     });
@@ -178,13 +236,13 @@ export const api = {
 
   // Settings
   async getSettings() {
-    const res = await fetch(`${BASE_URL}/restaurant/settings`);
+    const res = await fetch(`${getBaseUrl()}/restaurant/settings`);
     if (!res.ok) throw new Error('Failed to fetch settings');
     return res.json();
   },
 
   async updateSettings(data: any) {
-    const res = await fetch(`${BASE_URL}/restaurant/settings`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/settings`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -198,13 +256,13 @@ export const api = {
 
   // Coupons
   async getCoupons() {
-    const res = await fetch(`${BASE_URL}/coupons`);
+    const res = await fetch(`${getBaseUrl()}/coupons`);
     if (!res.ok) throw new Error('Failed to fetch coupons');
     return res.json();
   },
 
   async createCoupon(data: any) {
-    const res = await fetch(`${BASE_URL}/coupons`, {
+    const res = await fetch(`${getBaseUrl()}/coupons`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -217,7 +275,7 @@ export const api = {
   },
 
   async toggleCoupon(couponId: string) {
-    const res = await fetch(`${BASE_URL}/coupons/${couponId}/toggle`, {
+    const res = await fetch(`${getBaseUrl()}/coupons/${couponId}/toggle`, {
       method: 'PATCH',
       headers: { ...getAuthHeader() }
     });
@@ -226,7 +284,7 @@ export const api = {
   },
 
   async deleteCoupon(couponId: string) {
-    const res = await fetch(`${BASE_URL}/coupons/${couponId}`, {
+    const res = await fetch(`${getBaseUrl()}/coupons/${couponId}`, {
       method: 'DELETE',
       headers: { ...getAuthHeader() }
     });
@@ -236,7 +294,7 @@ export const api = {
 
   // Analytics
   async getAnalyticsDashboard() {
-    const res = await fetch(`${BASE_URL}/analytics/dashboard`, {
+    const res = await fetch(`${getBaseUrl()}/analytics/dashboard`, {
       headers: { ...getAuthHeader() }
     });
     if (!res.ok) throw new Error('Failed to fetch analytics');
@@ -244,12 +302,12 @@ export const api = {
   },
 
   getExportCsvUrl() {
-    return `${BASE_URL}/analytics/export-csv`;
+    return `${getBaseUrl()}/analytics/export-csv`;
   },
 
   // Customers
   async getCustomers() {
-    const res = await fetch(`${BASE_URL}/restaurant/customers`, {
+    const res = await fetch(`${getBaseUrl()}/restaurant/customers`, {
       headers: { ...getAuthHeader() }
     });
     if (!res.ok) throw new Error('Failed to fetch customer list');
@@ -258,7 +316,7 @@ export const api = {
 
   // Security & Admin Credentials
   async changeCredentials(payload: { current_password: string; new_name?: string; new_email?: string; new_password?: string }) {
-    const res = await fetch(`${BASE_URL}/auth/change-credentials`, {
+    const res = await fetch(`${getBaseUrl()}/auth/change-credentials`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -274,7 +332,7 @@ export const api = {
   },
 
   async getAdmins() {
-    const res = await fetch(`${BASE_URL}/auth/admins`, {
+    const res = await fetch(`${getBaseUrl()}/auth/admins`, {
       headers: { ...getAuthHeader() }
     });
     if (!res.ok) throw new Error('Failed to fetch admin users');
@@ -282,7 +340,7 @@ export const api = {
   },
 
   async createAdmin(payload: { name: string; email: string; phone: string; password: string; role?: string }) {
-    const res = await fetch(`${BASE_URL}/auth/admins`, {
+    const res = await fetch(`${getBaseUrl()}/auth/admins`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -298,7 +356,7 @@ export const api = {
   },
 
   async deleteAdmin(adminId: string) {
-    const res = await fetch(`${BASE_URL}/auth/admins/${adminId}`, {
+    const res = await fetch(`${getBaseUrl()}/auth/admins/${adminId}`, {
       method: 'DELETE',
       headers: { ...getAuthHeader() }
     });
@@ -313,7 +371,7 @@ export const api = {
   async uploadImage(file: File) {
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch(`${BASE_URL}/upload`, {
+    const res = await fetch(`${getBaseUrl()}/upload`, {
       method: 'POST',
       headers: { ...getAuthHeader() },
       body: formData

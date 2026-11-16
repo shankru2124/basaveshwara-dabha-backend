@@ -92,7 +92,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({
       </div>
 
       {/* Categories & Filter Bar */}
-      <div className="space-y-3">
+      <div className="space-y-3 max-w-full overflow-hidden">
         {/* Category Pills */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           <button

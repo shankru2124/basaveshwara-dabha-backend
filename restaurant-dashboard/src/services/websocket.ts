@@ -1,4 +1,5 @@
 import { startOrderAlarm, stopOrderAlarm, showBrowserNotification } from '../utils/audio';
+import { getWsBaseUrl } from './api';
 
 type WebSocketCallback = (data: any) => void;
 
@@ -14,7 +15,7 @@ class RestaurantWebSocketService {
       return;
     }
 
-    const wsUrl = (import.meta.env.VITE_WS_URL || 'ws://localhost:8000') + `/ws/restaurant`;
+    const wsUrl = `${getWsBaseUrl()}/ws/restaurant`;
 
     try {
       this.ws = new WebSocket(wsUrl);

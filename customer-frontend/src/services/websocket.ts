@@ -1,3 +1,5 @@
+import { getWsBaseUrl } from './api';
+
 type WebSocketCallback = (data: any) => void;
 
 class CustomerWebSocketService {
@@ -21,7 +23,7 @@ class CustomerWebSocketService {
       return;
     }
 
-    const wsUrl = (import.meta.env.VITE_WS_URL || 'ws://localhost:8000') + `/ws/customer/${this.clientId}`;
+    const wsUrl = `${getWsBaseUrl()}/ws/customer/${this.clientId}`;
 
     try {
       this.ws = new WebSocket(wsUrl);
