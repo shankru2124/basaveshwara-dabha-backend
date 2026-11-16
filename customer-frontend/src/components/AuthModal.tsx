@@ -39,16 +39,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const fillSampleCustomer = () => {
-    setFormData({
-      name: 'Ramesh Kumar',
-      email: 'customer@gmail.com',
-      phone: '9845012345',
-      password: 'Customer@123'
-    });
-    setMode('login');
-  };
-
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
       <div onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
@@ -182,17 +172,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             {isSubmitting ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
-
-        {/* Demo Helper Button */}
-        <div className="mt-5 pt-4 border-t border-gray-100 text-center">
-          <button
-            type="button"
-            onClick={fillSampleCustomer}
-            className="text-xs font-semibold text-brand-600 hover:text-brand-800 hover:underline inline-flex items-center gap-1"
-          >
-            Fill Demo Customer Credentials
-          </button>
-        </div>
       </div>
     </div>
   );

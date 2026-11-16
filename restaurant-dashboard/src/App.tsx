@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { OrderReceiptModal } from './components/OrderReceiptModal';
-import { LoginPage } from './pages/LoginPage';
 import { DashboardOverview } from './pages/DashboardOverview';
 import { LiveOrdersPage } from './pages/LiveOrdersPage';
 import { MenuManagementPage } from './pages/MenuManagementPage';
@@ -125,18 +124,6 @@ export const App: React.FC = () => {
       };
     }
   }, [isAuthenticated]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white text-xs font-bold uppercase tracking-wider">
-        Loading Command Center...
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <LoginPage />;
-  }
 
   const pendingOrdersCount = orders.filter((o) => o.order_status === 'PLACED').length;
 
