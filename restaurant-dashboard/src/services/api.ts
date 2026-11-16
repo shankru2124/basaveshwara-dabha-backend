@@ -12,13 +12,28 @@ export function getApiBaseUrl(): string {
   return 'https://basaveshwara-dabha-api.onrender.com/api';
 }
 
-export function setCustomApiUrl(url: string) {
-  if (!url) return;
+export function setCustomApiUrl(url: string): string {
+  if (!url) throw new Error('API URL cannot be empty');
   let cleanUrl = url.trim().replace(/\/+$/, '');
+
+  if (cleanUrl.includes('dashboard.render.com')) {
+    throw new Error('That is your Render account dashboard link. Please copy your public Web Service URL (e.g. https://your-service.onrender.com) found right under your service name.');
+  }
+
+  if (cleanUrl.includes('github.com')) {
+    throw new Error('That is your GitHub repository link. Please enter your Render Web Service URL (ending in .onrender.com).');
+  }
+
+  if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+    cleanUrl = `https://${cleanUrl}`;
+  }
+
   if (!cleanUrl.endsWith('/api')) {
     cleanUrl = `${cleanUrl}/api`;
   }
+
   localStorage.setItem('bd_api_url', cleanUrl);
+  return cleanUrl;
 }
 
 export function getBackendOrigin(): string {
@@ -41,6 +56,33 @@ export function getWsBaseUrl(): string {
   if (origin.startsWith('https://')) return origin.replace('https://', 'wss://');
   if (origin.startsWith('http://')) return origin.replace('http://', 'ws://');
   return 'wss://basaveshwara-dabha-api.onrender.com';
+}
+
+export async function pingBackendServer(candidateUrl?: string): Promise<{ success: boolean; message: string; status?: number }> {
+  const target = candidateUrl ? candidateUrl.trim().replace(/\/+$/, '') : getBackendOrigin();
+  const origin = target.endsWith('/api') ? target.replace(/\/api$/, '') : target;
+  const fullTarget = (!origin.startsWith('http://') && !origin.startsWith('https://')) ? `https://${origin}` : origin;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000); // 45s for Render cold start
+    const res = await fetch(`${fullTarget}/health`, {
+      method: 'GET',
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      return { success: true, message: `Server is active and online (HTTP ${res.status})!`, status: res.status };
+    } else {
+      return { success: false, message: `Server reached but returned HTTP ${res.status}.`, status: res.status };
+    }
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      return { success: false, message: 'Server connection timed out after 45s. The service might still be deploying or waking up.' };
+    }
+    return { success: false, message: `Unable to connect to ${fullTarget}. Check that your Web Service URL is correct and showing 'Live' in Render.` };
+  }
 }
 
 export function resolveImageUrl(url?: string | null): string {
@@ -70,16 +112,28 @@ function getAuthHeader(): Record<string, string> {
 export const api = {
   // Auth
   async login(credentials: { email: string; password: string }) {
-    const res = await fetch(`${getBaseUrl()}/auth/restaurant-login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials)
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || 'Invalid restaurant owner credentials');
+    const currentBase = getBaseUrl();
+    try {
+      const res = await fetch(`${currentBase}/auth/restaurant-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials)
+      });
+      if (!res.ok) {
+        let errDetail = 'Invalid restaurant owner credentials';
+        try {
+          const err = await res.json();
+          errDetail = err.detail || errDetail;
+        } catch (_) {}
+        throw new Error(errDetail);
+      }
+      return await res.json();
+    } catch (err: any) {
+      if (err.message && !err.message.toLowerCase().includes('fetch')) {
+        throw err;
+      }
+      throw new Error(`Unable to connect to backend at ${currentBase}. The Render server may be in sleep mode or the URL needs checking.`);
     }
-    return res.json();
   },
 
   async getProfile() {

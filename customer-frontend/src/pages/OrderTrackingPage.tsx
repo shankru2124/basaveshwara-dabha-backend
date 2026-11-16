@@ -7,7 +7,6 @@ import { Order, OrderStatus } from '../types';
 import { api } from '../services/api';
 import { customerWs } from '../services/websocket';
 import { playOrderChime } from '../utils/audio';
-import { UpiPaymentModal } from '../components/UpiPaymentModal';
 
 interface OrderTrackingPageProps {
   orderId: string;
@@ -28,7 +27,6 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isCancelling, setIsCancelling] = useState(false);
-  const [showUpiModal, setShowUpiModal] = useState(false);
 
   const fetchOrder = async () => {
     try {
@@ -339,16 +337,6 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
               )}
             </div>
 
-            {order.payment_status === 'PENDING' && order.payment_method === 'RAZORPAY_UPI' && !isCancelled && !isRejected && (
-              <button
-                type="button"
-                onClick={() => setShowUpiModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition"
-              >
-                <QrCode className="w-3.5 h-3.5" />
-                Pay via UPI / Confirm
-              </button>
-            )}
           </div>
         </div>
 
@@ -367,20 +355,6 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
           </div>
         )}
       </div>
-
-      {/* UPI Payment Modal */}
-      {showUpiModal && (
-        <UpiPaymentModal
-          isOpen={showUpiModal}
-          orderId={order.order_id}
-          totalAmount={order.total_amount}
-          onSuccess={() => {
-            setShowUpiModal(false);
-            fetchOrder();
-          }}
-          onClose={() => setShowUpiModal(false)}
-        />
-      )}
     </div>
   );
 };

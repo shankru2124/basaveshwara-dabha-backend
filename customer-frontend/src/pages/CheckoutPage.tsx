@@ -7,7 +7,6 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { PaymentMethod, FulfillmentType } from '../types';
 import { api } from '../services/api';
-import { UpiPaymentModal } from '../components/UpiPaymentModal';
 
 interface CheckoutPageProps {
   onOrderSuccess: (orderId: string) => void;
@@ -38,11 +37,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [upiModalData, setUpiModalData] = useState<{
-    orderId: string;
-    totalAmount: number;
-    upiDetails: any;
-  } | null>(null);
 
   // Sync user info if logged in
   useEffect(() => {
@@ -130,18 +124,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
       const createdOrder = res.order;
       const orderId = createdOrder.order_id;
 
-      // 2. If Direct Restaurant Merchant Stand QR
-      if (paymentMethod === 'DIRECT_QR') {
-        setIsSubmitting(false);
-        setUpiModalData({
-          orderId,
-          totalAmount: createdOrder.total_amount,
-          upiDetails: res.upi
-        });
-        return;
-      }
-
-      // 3. If automated online payment (UPI / GPay / PhonePe / Paytm / Cards via Gateway)
+      // 2. Automated Real Online Bank Payment (UPI, GPay, PhonePe, Paytm, QR, Cards)
       if (
         paymentMethod === 'RAZORPAY_UPI' ||
         paymentMethod === 'RAZORPAY_CARD' ||
@@ -150,7 +133,24 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
         const razorpayOrderId = res.razorpay_order_id;
         const keyId = res.key_id;
 
-        // Open Razorpay Standard Automated Checkout
+        // Ensure Razorpay SDK script is available dynamically
+        if (typeof window.Razorpay === 'undefined') {
+          try {
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+              script.async = true;
+              script.onload = resolve;
+              script.onerror = () => reject(new Error('Failed to load Razorpay payment gateway'));
+              document.head.appendChild(script);
+            });
+          } catch (scriptErr: any) {
+            setErrorMessage('Payment gateway is currently unreachable. Please check internet connection or select Cash on Delivery.');
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
         if (typeof window.Razorpay !== 'undefined') {
           const options = {
             key: keyId,
@@ -171,7 +171,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
             handler: async (response: any) => {
               setIsSubmitting(true);
               try {
-                // Verify signature on backend (HMAC SHA256 anti-scam protection)
+                // Cryptographically verify bank HMAC SHA256 token on backend
                 await api.verifyPayment({
                   order_id: orderId,
                   razorpay_order_id: response.razorpay_order_id,
@@ -181,13 +181,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
                 clearCart();
                 onOrderSuccess(orderId);
               } catch (verifyErr: any) {
-                setErrorMessage(verifyErr.message || 'Payment verification failed.');
+                setErrorMessage(verifyErr.message || 'Bank payment verification failed. Amount was not debited.');
                 setIsSubmitting(false);
               }
             },
             modal: {
               ondismiss: () => {
                 setIsSubmitting(false);
+                setErrorMessage('Payment cancelled or closed. Your order was NOT placed. Please pay online or select Cash on Delivery to complete order.');
               }
             }
           };
@@ -196,20 +197,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
           rzp.open();
           return;
         } else {
-          // Fallback simulation for offline/test environments without Razorpay script
-          await api.verifyPayment({
-            order_id: orderId,
-            razorpay_order_id: razorpayOrderId || `order_mock_${orderId}`,
-            razorpay_payment_id: `pay_mock_${Date.now()}`,
-            razorpay_signature: `sig_mock_${Date.now()}`
-          });
-          clearCart();
-          onOrderSuccess(orderId);
+          setErrorMessage('Payment gateway could not be loaded. Please select Cash on Delivery.');
+          setIsSubmitting(false);
           return;
         }
       }
 
-      // COD Order placed successfully
+      // 3. Cash on Delivery (COD) Order
       clearCart();
       onOrderSuccess(orderId);
     } catch (err: any) {
@@ -427,39 +421,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
                 </div>
               </label>
 
-              {/* 2. Direct Counter Stand QR */}
-              <label
-                className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition ${
-                  paymentMethod === 'DIRECT_QR'
-                    ? 'border-brand-500 bg-brand-50/40 text-brand-900 shadow-sm'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name="payment_method"
-                    value="DIRECT_QR"
-                    checked={paymentMethod === 'DIRECT_QR'}
-                    onChange={() => setPaymentMethod('DIRECT_QR')}
-                    className="text-brand-600 focus:ring-brand-500"
-                  />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-sm">Restaurant Counter Stand QR</h4>
-                      <span className="px-2 py-0.5 text-[10px] bg-amber-100 text-amber-800 font-bold rounded-full">
-                        Manual Stand QR
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Scan restaurant's physical desk QR code (verified by restaurant kitchen manager)
-                    </p>
-                  </div>
-                </div>
-                <QrCode className="w-5 h-5 text-amber-600 shrink-0" />
-              </label>
-
-              {/* 3. Cash on Delivery */}
+              {/* 2. Cash on Delivery */}
               <label
                 className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition ${
                   paymentMethod === 'COD'
@@ -561,23 +523,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
         </div>
       </div>
 
-      {/* Real UPI Payment Modal */}
-      {upiModalData && (
-        <UpiPaymentModal
-          isOpen={!!upiModalData}
-          orderId={upiModalData.orderId}
-          totalAmount={upiModalData.totalAmount}
-          upiDetails={upiModalData.upiDetails}
-          onSuccess={(orderId) => {
-            setUpiModalData(null);
-            clearCart();
-            onOrderSuccess(orderId);
-          }}
-          onClose={() => {
-            setUpiModalData(null);
-          }}
-        />
-      )}
     </div>
   );
 };

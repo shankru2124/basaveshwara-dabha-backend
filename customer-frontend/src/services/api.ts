@@ -12,6 +12,19 @@ export function getApiBaseUrl(): string {
   return 'https://basaveshwara-dabha-api.onrender.com/api';
 }
 
+export function setCustomApiUrl(url: string): string {
+  if (!url) throw new Error('API URL cannot be empty');
+  let cleanUrl = url.trim().replace(/\/+$/, '');
+  if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+    cleanUrl = `https://${cleanUrl}`;
+  }
+  if (!cleanUrl.endsWith('/api')) {
+    cleanUrl = `${cleanUrl}/api`;
+  }
+  localStorage.setItem('bd_api_url', cleanUrl);
+  return cleanUrl;
+}
+
 export function getBackendOrigin(): string {
   const base = getApiBaseUrl();
   return base.replace(/\/api\/?$/, '');

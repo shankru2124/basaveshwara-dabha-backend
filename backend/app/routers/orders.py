@@ -9,7 +9,7 @@ from app.models.order import (
     OrderCreateRequest, OrderStatus, PaymentStatus, PaymentMethod,
     FulfillmentType, PaymentVerifyRequest, UpiPaymentConfirmRequest
 )
-from app.utils.security import get_optional_user, get_current_user
+from app.utils.security import get_optional_user, get_current_user, get_current_admin
 from app.utils.payment import create_razorpay_order, verify_razorpay_signature
 from app.utils.serializers import serialize_doc, serialize_docs
 from app.websocket_manager import ws_manager
@@ -199,7 +199,11 @@ async def create_order(req: OrderCreateRequest, optional_user: dict = Depends(ge
     }
 
 @router.post("/confirm-upi")
-async def confirm_upi_payment(req: UpiPaymentConfirmRequest):
+async def confirm_upi_payment(req: UpiPaymentConfirmRequest, current_admin: dict = Depends(get_current_admin)):
+    """
+    Staff / Admin ONLY: Confirm a manual counter UPI payment after verifying physical bank SMS or soundbox.
+    Customers cannot self-confirm payments to prevent fraud and financial loss.
+    """
     db = get_database()
     order = await db.orders.find_one({"order_id": req.order_id})
     if not order:

@@ -147,12 +147,18 @@ async def test_upi_order_placement_and_confirmation():
         orders_before = rest_orders_before.json()["orders"]
         assert not any(o["order_id"] == order_id for o in orders_before)
 
-        # 3. Confirm UPI payment with UTR number (Payment COMPLETED, order stays PLACED for review)
+        # 3. Staff / Admin confirms manual counter UPI payment (Unauthenticated customer gets 401)
+        unauth_confirm = await ac.post("/api/orders/confirm-upi", json={
+            "order_id": order_id,
+            "utr_number": "123456789012"
+        })
+        assert unauth_confirm.status_code == 401, "Unauthenticated customer must be blocked from self-confirming payments"
+
         confirm_res = await ac.post("/api/orders/confirm-upi", json={
             "order_id": order_id,
             "utr_number": "123456789012",
             "upi_app": "Google Pay"
-        })
+        }, headers=headers)
         assert confirm_res.status_code == 200
         conf_data = confirm_res.json()["order"]
         assert conf_data["payment_status"] == "COMPLETED"
