@@ -2,8 +2,13 @@ import os
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-ROOT_DIR = BASE_DIR.parent
+def find_root_dir(p: Path) -> Path:
+    for ancestor in [p.parent, p.parent.parent, p.parent.parent.parent]:
+        if (ancestor / "database").exists() or (ancestor / "backend").exists() or (ancestor / "render.yaml").exists() or (ancestor / ".git").exists():
+            return ancestor
+    return p.parent.parent
+
+ROOT_DIR = find_root_dir(Path(__file__).resolve())
 UPLOAD_DIR = ROOT_DIR / "uploads"
 DATABASE_DIR = ROOT_DIR / "database"
 
