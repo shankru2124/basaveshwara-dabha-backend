@@ -18,18 +18,26 @@ import { Order, MenuItem, Category, AnalyticsDashboard, RestaurantSettings } fro
 import { api } from './services/api';
 import { restaurantWs } from './services/websocket';
 import { startOrderAlarm, stopOrderAlarm, onAlarmStateChange } from './utils/audio';
+import {
+  DEFAULT_SETTINGS,
+  DEFAULT_CATEGORIES,
+  DEFAULT_MENU_ITEMS,
+  DEFAULT_ORDERS,
+  DEFAULT_ANALYTICS
+} from './data/defaultData';
 import { BellRing, VolumeX, ArrowRight } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAdminAuth();
-  const [currentTab, setCurrentTab] = useState<string>('overview');
+  const { isAuthenticated } = useAdminAuth();
+  const [currentTab, setCurrentTab] = useState<string>('settings');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
-  // Global State
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
-  const [settings, setSettings] = useState<RestaurantSettings | null>(null);
+  // Global State pre-seeded with full defaults so editable options and controls are immediately visible
+  const [orders, setOrders] = useState<Order[]>(DEFAULT_ORDERS);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(DEFAULT_MENU_ITEMS);
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(DEFAULT_ANALYTICS);
+  const [settings, setSettings] = useState<RestaurantSettings | null>(DEFAULT_SETTINGS);
 
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -50,18 +58,29 @@ export const App: React.FC = () => {
   const loadAllData = async () => {
     setIsRefreshing(true);
     try {
-      const [ordersRes, menuRes, catRes, analyticsRes, settingsRes] = await Promise.all([
+      const results = await Promise.allSettled([
         api.getOrders({ limit: 100 }),
         api.getMenu(),
         api.getCategories(),
         api.getAnalyticsDashboard(),
         api.getSettings()
       ]);
-      setOrders(ordersRes.orders || []);
-      setMenuItems(menuRes || []);
-      setCategories(catRes || []);
-      setAnalytics(analyticsRes || null);
-      setSettings(settingsRes || null);
+
+      if (results[0].status === 'fulfilled' && results[0].value?.orders) {
+        setOrders(results[0].value.orders);
+      }
+      if (results[1].status === 'fulfilled' && Array.isArray(results[1].value) && results[1].value.length > 0) {
+        setMenuItems(results[1].value);
+      }
+      if (results[2].status === 'fulfilled' && Array.isArray(results[2].value) && results[2].value.length > 0) {
+        setCategories(results[2].value);
+      }
+      if (results[3].status === 'fulfilled' && results[3].value) {
+        setAnalytics(results[3].value);
+      }
+      if (results[4].status === 'fulfilled' && results[4].value) {
+        setSettings(results[4].value);
+      }
     } catch (err) {
       console.error('Error fetching admin data:', err);
     } finally {
@@ -70,60 +89,58 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadAllData();
-      restaurantWs.connect();
+    loadAllData();
+    restaurantWs.connect();
 
-      const unsub = restaurantWs.subscribe((data) => {
-        setIsWsConnected(restaurantWs.getIsConnected());
+    const unsub = restaurantWs.subscribe((data) => {
+      setIsWsConnected(restaurantWs.getIsConnected());
 
-        if (data.event === 'new_order') {
-          // Trigger 20-30 seconds persistent kitchen alarm
-          startOrderAlarm(data.order?.order_id);
+      if (data.event === 'new_order') {
+        // Trigger 20-30 seconds persistent kitchen alarm
+        startOrderAlarm(data.order?.order_id);
 
-          // Browser notification if permitted
-          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-            try {
-              new Notification('🔔 New Paid Order Received!', {
-                body: `Order #${data.order?.order_id || ''} (₹${data.order?.total_amount || ''}) is waiting for kitchen acceptance.`,
-                icon: '/logo.jpg'
-              });
-            } catch (nErr) {}
-          }
-
-          // New incoming order from customer
-          setOrders((prev) => [data.order, ...prev.filter(o => o.order_id !== data.order.order_id)]);
-          // Also refresh analytics
-          api.getAnalyticsDashboard().then(setAnalytics).catch(() => {});
-        } else if (data.event === 'order_status_updated' || data.event === 'payment_confirmed') {
-          // If any order is accepted, rejected, or completed, stop alarm!
-          if (data.order && data.order.order_status !== 'PLACED') {
-            stopOrderAlarm();
-          }
-          if (data.order) {
-            setOrders((prev) =>
-              prev.map((o) => (o.order_id === data.order.order_id ? data.order : o))
-            );
-          } else {
-            api.getOrders({ limit: 100 }).then((res) => setOrders(res.orders || [])).catch(() => {});
-          }
-          api.getAnalyticsDashboard().then(setAnalytics).catch(() => {});
-        } else if (data.event === 'restaurant_status_changed' && data.settings) {
-          setSettings(data.settings);
+        // Browser notification if permitted
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          try {
+            new Notification('🔔 New Paid Order Received!', {
+              body: `Order #${data.order?.order_id || ''} (₹${data.order?.total_amount || ''}) is waiting for kitchen acceptance.`,
+              icon: '/logo.jpg'
+            });
+          } catch (nErr) {}
         }
-      });
 
-      // Periodic check on WS connection state
-      const checkInterval = setInterval(() => {
-        setIsWsConnected(restaurantWs.getIsConnected());
-      }, 3000);
+        // New incoming order from customer
+        setOrders((prev) => [data.order, ...prev.filter(o => o.order_id !== data.order.order_id)]);
+        // Also refresh analytics
+        api.getAnalyticsDashboard().then(setAnalytics).catch(() => {});
+      } else if (data.event === 'order_status_updated' || data.event === 'payment_confirmed') {
+        // If any order is accepted, rejected, or completed, stop alarm!
+        if (data.order && data.order.order_status !== 'PLACED') {
+          stopOrderAlarm();
+        }
+        if (data.order) {
+          setOrders((prev) =>
+            prev.map((o) => (o.order_id === data.order.order_id ? data.order : o))
+          );
+        } else {
+          api.getOrders({ limit: 100 }).then((res) => setOrders(res.orders || [])).catch(() => {});
+        }
+        api.getAnalyticsDashboard().then(setAnalytics).catch(() => {});
+      } else if (data.event === 'restaurant_status_changed' && data.settings) {
+        setSettings(data.settings);
+      }
+    });
 
-      return () => {
-        unsub();
-        clearInterval(checkInterval);
-      };
-    }
-  }, [isAuthenticated]);
+    // Periodic check on WS connection state
+    const checkInterval = setInterval(() => {
+      setIsWsConnected(restaurantWs.getIsConnected());
+    }, 3000);
+
+    return () => {
+      unsub();
+      clearInterval(checkInterval);
+    };
+  }, []);
 
   const pendingOrdersCount = orders.filter((o) => o.order_status === 'PLACED').length;
 
@@ -147,7 +164,7 @@ export const App: React.FC = () => {
     customers: { title: 'Customer Directory', subtitle: 'Patron profiles, total orders, lifetime expenditure, and addresses' },
     coupons: { title: 'Coupons & Promos', subtitle: 'Discount campaigns and promotional offers' },
     analytics: { title: 'Reports & Analytics', subtitle: 'Revenue breakdowns, popular dishes, and financial metrics' },
-    settings: { title: 'Restaurant Settings', subtitle: 'Operating hours, policies, delivery fees, and online ordering controls' },
+    settings: { title: 'Display & Restaurant Settings', subtitle: 'Customer header editor, announcement banners, operating hours, delivery fees, and online ordering controls' },
     security: { title: 'Admin Security & Credentials', subtitle: 'Manage administrator passwords, usernames, and kitchen staff accounts' },
   };
 
@@ -155,13 +172,15 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex bg-slate-50 font-sans selection:bg-brand-500 selection:text-white">
-      {/* Sidebar */}
+      {/* Sidebar (Desktop permanent + Mobile slide-out drawer) */}
       <Sidebar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         pendingOrderCount={pendingOrdersCount}
         isAcceptingOrders={settings?.is_accepting_orders ?? true}
         onToggleAcceptingOrders={handleToggleAcceptingOrders}
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
       />
 
       {/* Main Content Area */}
@@ -172,6 +191,10 @@ export const App: React.FC = () => {
           isWsConnected={isWsConnected}
           onRefresh={loadAllData}
           isRefreshing={isRefreshing}
+          currentTab={currentTab}
+          onSelectTab={setCurrentTab}
+          onToggleMobileSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
+          pendingOrderCount={pendingOrdersCount}
         />
 
         <main className="flex-1">
