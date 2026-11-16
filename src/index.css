@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: #E9DFCE;
+  }
+  
+  body {
+    background-color: #FDFAF5;
+    color: #1C0F0A;
+    font-family: 'Plus Jakarta Sans', 'Noto Sans Kannada', sans-serif;
+  }
+}
+
+/* Custom Scrollbar for Dabha Aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F7F2E8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #B45309;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #D97706;
+}
+
+/* Pulsing Badge for Urgent / Live Statuses */
+@keyframes warmPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.03);
+  }
+}
+
+.animate-warm-pulse {
+  animation: warmPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Veg / Non-Veg Border Icons */
+.veg-indicator {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #15803D;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background-color: #FFFFFF;
+}
+
+.veg-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #15803D;
+}
+
+.nonveg-indicator {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #DC2626;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background-color: #FFFFFF;
+}
+
+.nonveg-indicator-dot {
+  width: 0;
+  height: 0;
+  border-left: 4.5px solid transparent;
+  border-right: 4.5px solid transparent;
+  border-bottom: 8px solid #DC2626;
+}

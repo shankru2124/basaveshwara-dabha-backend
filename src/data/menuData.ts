@@ -1,0 +1,311 @@
+import { Category, Product, DeliveryPartner, Offer } from '../types';
+
+export const initialCategories: Category[] = [
+  { id: 'cat-meals', name_en: 'Rotti Meals & Thali', name_kn: 'ಜೋಳದ ರೊಟ್ಟಿ ಊಟ & ಥಾಲಿ', slug: 'meals', display_order: 1, is_active: true },
+  { id: 'cat-roti', name_en: 'Jolada Rotti & Breads', name_kn: 'ಜೋಳದ ರೊಟ್ಟಿ & ಬ್ರೆಡ್ಸ್', slug: 'roti', display_order: 2, is_active: true },
+  { id: 'cat-curries', name_en: 'North Karnataka Palya', name_kn: 'ಉತ್ತರ ಕರ್ನಾಟಕ ಪಲ್ಯಗಳು', slug: 'curries', display_order: 3, is_active: true },
+  { id: 'cat-paneer', name_en: 'Dabha Paneer & Kaju', name_kn: 'ದಾಬಾ ಪನೀರ್ & ಕಾಜು ಗ್ರೇವಿ', slug: 'paneer', display_order: 4, is_active: true },
+  { id: 'cat-biryani', name_en: 'Pure Veg Dum Biryani', name_kn: 'ವೆಜ್ ದಮ್ ಬಿರಿಯಾನಿ & ಪುಲಾವ್', slug: 'biryani', display_order: 5, is_active: true },
+  { id: 'cat-snacks', name_en: 'Evening Snacks & Chaats', name_kn: 'ಸಂಜೆಯ ತಿಂಡಿ & ಚಾಟ್ಸ್', slug: 'snacks', display_order: 6, is_active: true },
+  { id: 'cat-drinks', name_en: 'Desserts & Beverages', name_kn: 'ಸಿಹಿ & ತಂಪಾದ ಪಾನೀಯಗಳು', slug: 'drinks', display_order: 7, is_active: true },
+];
+
+export const initialProducts: Product[] = [
+  {
+    id: 'prod-1',
+    category_id: 'cat-meals',
+    name_en: 'Special Basaveshwara Jolada Rotti Oota',
+    name_kn: 'ಸ್ಪೆಷಲ್ ಬಸವೇಶ್ವರ ಜೋಳದ ರೊಟ್ಟಿ ಊಟ',
+    description_en: '100% Pure Veg North Karnataka royal feast: 2 Hot Jolada Rottis, Badanekayi Yennegai, Kaalu Palya, Shengachutney Pudi, Curd, Shenga Holige with pure ghee & Rice Sambar.',
+    description_kn: '೧೦೦% ಶುದ್ಧ ಸಸ್ಯಾಹಾರಿ ಅಪ್ಪಟ ಉತ್ತರ ಕರ್ನಾಟಕದ ಭೋಜನ: ೨ ಬಿಸಿ ಜೋಳದ ರೊಟ್ಟಿ, ಬದನೆಕಾಯಿ ಎಣ್ಣೆಗಾಯಿ, ಕಾಳು ಪಲ್ಯ, ಶೇಂಗಾ ಚಟ್ನಿ ಪುಡಿ, ಮೊಸರು, ಶೇಂಗಾ ಹೋಳಿಗೆ ಮತ್ತು ಅನ್ನ-ಸಾಂಬಾರ್.',
+    base_price: 180,
+    image_url: 'https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 2,
+    preparation_time_minutes: 15,
+    is_bestseller: true,
+    variants: [
+      { id: 'var-1-1', product_id: 'prod-1', name_en: 'Standard Oota (2 Rottis)', name_kn: 'ಸಾಧಾರಣ ಊಟ (೨ ರೊಟ್ಟಿ)', price: 180, is_default: true },
+      { id: 'var-1-2', product_id: 'prod-1', name_en: 'Unlimited Special Feast (4 Rottis)', name_kn: 'ಸ್ಪೆಷಲ್ ಭೋಜನ (೪ ರೊಟ್ಟಿ)', price: 250 },
+    ]
+  },
+  {
+    id: 'prod-2',
+    category_id: 'cat-roti',
+    name_en: 'Crispy Soft Jolada Rotti (Set of 2)',
+    name_kn: 'ಬಿಸಿಬಿಸಿ ಜೋಳದ ರೊಟ್ಟಿ (೨ ರೊಟ್ಟಿ)',
+    description_en: 'Authentic sorghum flatbread hand-tapped and griddle-cooked. Served piping hot with Shengachutney Pudi and pure butter.',
+    description_kn: 'ಕೈಯಿಂದ ತಟ್ಟಿ ಸುಟ್ಟ ಬಿಸಿಬಿಸಿ ಗರಿಗರಿಯಾದ ಜೋಳದ ರೊಟ್ಟಿ. ಶೇಂಗಾ ಚಟ್ನಿ ಪುಡಿ ಮತ್ತು ಬೆಣ್ಣೆಯೊಂದಿಗೆ ಸವಿಯಿರಿ.',
+    base_price: 40,
+    image_url: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 1,
+    preparation_time_minutes: 8,
+    is_bestseller: true,
+    variants: [
+      { id: 'var-2-1', product_id: 'prod-2', name_en: 'Pack of 2 Rottis', name_kn: '೨ ರೊಟ್ಟಿ ಪ್ಯಾಕ್', price: 40, is_default: true },
+      { id: 'var-2-2', product_id: 'prod-2', name_en: 'Pack of 5 Rottis (With Shengachutney Pudi)', name_kn: '೫ ರೊಟ್ಟಿ + ಚಟ್ನಿಪುಡಿ', price: 95 },
+    ]
+  },
+  {
+    id: 'prod-3',
+    category_id: 'cat-curries',
+    name_en: 'North Karnataka Badanekayi Yennegai',
+    name_kn: 'ಉತ್ತರ ಕರ್ನಾಟಕ ಬದನೆಕಾಯಿ ಎಣ್ಣೆಗಾಯಿ',
+    description_en: 'Small tender brinjals stuffed with roasted peanut powder, sesame, dry coconut, jaggery and slow-simmered in rich aromatic gravy.',
+    description_kn: 'ಶೇಂಗಾ, ಎಳ್ಳು, ಒಣಕೊಬ್ಬರಿ ಮತ್ತು ಮಸಾಲೆ ತುಂಬಿದ ಸಾಂಪ್ರದಾಯಿಕ ಬದನೆಕಾಯಿ ಎಣ್ಣೆಗಾಯಿ ಪಲ್ಯ. ಜೋಳದ ರೊಟ್ಟಿಗೆ ಅತ್ಯುತ್ತಮ ಜೋಡಿ.',
+    base_price: 130,
+    image_url: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 2,
+    preparation_time_minutes: 12,
+    is_bestseller: true,
+    variants: [
+      { id: 'var-3-1', product_id: 'prod-3', name_en: 'Regular Bowl (250ml)', name_kn: 'ಸಾಮಾನ್ಯ ಬೌಲ್', price: 130, is_default: true },
+      { id: 'var-3-2', product_id: 'prod-3', name_en: 'Large Family Pack (500ml)', name_kn: 'ದೊಡ್ಡ ಪ್ಯಾಕ್', price: 210 },
+    ]
+  },
+  {
+    id: 'prod-4',
+    category_id: 'cat-curries',
+    name_en: 'Hesaru Kaalu Palya (Sprouted Moong Curry)',
+    name_kn: 'ಹೆಸರು ಕಾಳು ಪಲ್ಯ',
+    description_en: 'Nutritious sprouted green gram tempered with mustard, cumin, green chillies, onions, fresh coconut and coriander.',
+    description_kn: 'ಉತ್ತರ ಕರ್ನಾಟಕದ ಪೌಷ್ಟಿಕ ಮೊಳಕೆ ಕಟ್ಟಿದ ಹೆಸರು ಕಾಳು ಪಲ್ಯ. ಕೊಬ್ಬರಿ ಹಾಗೂ ಕರಿಬೇವಿನ ರುಚಿಕರ ಒಗ್ಗರಣೆ.',
+    base_price: 110,
+    image_url: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 2,
+    preparation_time_minutes: 10,
+    variants: [
+      { id: 'var-4-1', product_id: 'prod-4', name_en: 'Regular', name_kn: 'ಸಾಧಾರಣ', price: 110, is_default: true },
+      { id: 'var-4-2', product_id: 'prod-4', name_en: 'Double Bowl', name_kn: 'ಡಬಲ್ ಬೌಲ್', price: 190 },
+    ]
+  },
+  {
+    id: 'prod-5',
+    category_id: 'cat-paneer',
+    name_en: 'Basaveshwara Dabha Paneer Butter Masala',
+    name_kn: 'ಬಸವೇಶ್ವರ ದಾಬಾ ಪನೀರ್ ಬಟರ್ ಮಸಾಲಾ',
+    description_en: 'Rich velvety tomato cashew gravy infused with charcoal smokiness, soft malai paneer cubes and fragrant kasuri methi.',
+    description_kn: 'ಶುದ್ಧ ಬೆಣ್ಣೆ ಮತ್ತು ಗೋಡಂಬಿ ಗ್ರೇವಿಯೊಂದಿಗೆ ಮೃದುವಾದ ಪನೀರ್ ಕ್ಯೂಬ್ಸ್ ಹೊಂದಿದ ದಟ್ಟವಾದ ದಾಬಾ ಸ್ಪೆಷಲ್ ಕರಿ.',
+    base_price: 210,
+    image_url: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 2,
+    preparation_time_minutes: 15,
+    is_bestseller: true,
+    variants: [
+      { id: 'var-5-1', product_id: 'prod-5', name_en: 'Half Portion', name_kn: 'ಅರ್ಧ ಪ್ಲೇಟ್', price: 130 },
+      { id: 'var-5-2', product_id: 'prod-5', name_en: 'Full Portion', name_kn: 'ಫುಲ್ ಪ್ಲೇಟ್', price: 210, is_default: true },
+    ]
+  },
+  {
+    id: 'prod-6',
+    category_id: 'cat-paneer',
+    name_en: 'Shahi Kaju Masala Dabha Handi',
+    name_kn: 'ಶಾಹಿ ಕಾಜು ಮಸಾಲಾ ದಾಬಾ ಹಂಡಿ',
+    description_en: 'Whole golden roasted cashew nuts simmered in a luscious onion-tomato cream gravy cooked in traditional clay pot.',
+    description_kn: 'ಹುರಿದ ಗೋಡಂಬಿಗಳನ್ನು ಮಣ್ಣಿನ ಮಡಕೆಯಲ್ಲಿ ಬೆಣ್ಣೆ ಹಾಗೂ ದಾಬಾ ಮಸಾಲೆಗಳೊಂದಿಗೆ ಸಿದ್ಧಪಡಿಸಿದ ರಾಯಲ್ ಗ್ರೇವಿ.',
+    base_price: 240,
+    image_url: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 2,
+    preparation_time_minutes: 15,
+    variants: [
+      { id: 'var-6-1', product_id: 'prod-6', name_en: 'Regular', name_kn: 'ಸಾಧಾರಣ', price: 240, is_default: true },
+      { id: 'var-6-2', product_id: 'prod-6', name_en: 'Jumbo Bowl', name_kn: 'ಜಂಬೋ ಬೌಲ್', price: 380 },
+    ]
+  },
+  {
+    id: 'prod-7',
+    category_id: 'cat-biryani',
+    name_en: 'Basaveshwara Handi Veg Dum Biryani',
+    name_kn: 'ಬಸವೇಶ್ವರ ಹಂಡಿ ವೆಜ್ ದಮ್ ಬಿರಿಯಾನಿ',
+    description_en: 'Sealed dough dum claypot biryani layered with aromatic basmati rice, fresh garden vegetables, paneer cubes, saffron and mint.',
+    description_kn: 'ಮಡಕೆಯಲ್ಲಿ ಸಿದ್ಧಪಡಿಸಿದ ಸುವಾಸನಾಯುಕ್ತ ಶುದ್ಧ ಸಸ್ಯಾಹಾರಿ ವೆಜ್ ದಮ್ ಬಿರಿಯಾನಿ. ತರಕಾರಿ, ಪನೀರ್ ಮತ್ತು ದಾಬಾ ಸ್ಪೆಷಲ್ ಸಾಲನ್-ರೈತಾದೊಂದಿಗೆ.',
+    base_price: 190,
+    image_url: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 2,
+    preparation_time_minutes: 18,
+    is_bestseller: true,
+    variants: [
+      { id: 'var-7-1', product_id: 'prod-7', name_en: 'Half Handi (1 person)', name_kn: 'ಅರ್ಧ ಹಂಡಿ', price: 120 },
+      { id: 'var-7-2', product_id: 'prod-7', name_en: 'Full Handi (2 persons)', name_kn: 'ಫುಲ್ ಹಂಡಿ', price: 190, is_default: true },
+      { id: 'var-7-3', product_id: 'prod-7', name_en: 'Family Bucket (3-4 persons)', name_kn: 'ಫ್ಯಾಮಿಲಿ ಬಕೆಟ್', price: 360 },
+    ]
+  },
+  {
+    id: 'prod-8',
+    category_id: 'cat-roti',
+    name_en: 'Tandoori Butter Garlic Naan (Pure Veg)',
+    name_kn: 'ತಂದೂರಿ ಬಟರ್ ಗಾರ್ಲಿಕ್ ನಾನ್',
+    description_en: 'Crispy charcoal oven baked naan brushed generously with garlic butter and chopped fresh coriander.',
+    description_kn: 'ತಂದೂರಿನಲ್ಲಿ ಬೇಯಿಸಿ ಬೆಳ್ಳುಳ್ಳಿ ಬೆಣ್ಣೆ ಸವರಿದ ಗರಿಗರಿ ನಾನ್.',
+    base_price: 55,
+    image_url: 'https://images.unsplash.com/photo-1626074353765-517a681e40be?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 1,
+    preparation_time_minutes: 8,
+    variants: [
+      { id: 'var-8-1', product_id: 'prod-8', name_en: 'Single Naan', name_kn: 'ಒಂದು ನಾನ್', price: 55, is_default: true },
+      { id: 'var-8-2', product_id: 'prod-8', name_en: 'Basket of 3 Naans', name_kn: '೩ ನಾನ್ ಬ್ಯಾಸ್ಕೆಟ್', price: 150 },
+    ]
+  },
+  {
+    id: 'prod-9',
+    category_id: 'cat-snacks',
+    name_en: 'Hubballi Famous Girmit & Mirchi Bajji Combo',
+    name_kn: 'ಹುಬ್ಬಳ್ಳಿ ಪ್ರಸಿದ್ಧ ಗಿರ್ಮಿಟ್ & ಮಿರ್ಚಿ ಬಜ್ಜಿ ಕಾಂಬೊ',
+    description_en: 'Iconic North Karnataka street delicacy: Puffed rice tossed in spicy roasted tomato-tamarind masala, served with 2 crispy Menasinakai Mirchi Bajjis.',
+    description_kn: 'ಹುಬ್ಬಳ್ಳಿಯ ಅತ್ಯಂತ ಜನಪ್ರಿಯ ಗಿರ್ಮಿಟ್, ಈರುಳ್ಳಿ, ಸೇವ್ ಮತ್ತು ೨ ಗರಿಗರಿ ಬಿಸಿ ಮಿರ್ಚಿ ಬಜ್ಜಿಯೊಂದಿಗೆ ನೀಡಲಾಗುತ್ತದೆ.',
+    base_price: 70,
+    image_url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 3,
+    preparation_time_minutes: 10,
+    is_bestseller: true,
+    variants: [
+      { id: 'var-9-1', product_id: 'prod-9', name_en: 'Single Plate (Girmit + 2 Mirchi)', name_kn: '೧ ಪ್ಲೇಟ್ + ೨ ಮಿರ್ಚಿ', price: 70, is_default: true },
+      { id: 'var-9-2', product_id: 'prod-9', name_en: 'Family Plate (Girmit + 5 Mirchi)', name_kn: 'ಫ್ಯಾಮಿಲಿ ಪ್ಲೇಟ್ + ೫ ಮಿರ್ಚಿ', price: 130 },
+    ]
+  },
+  {
+    id: 'prod-10',
+    category_id: 'cat-drinks',
+    name_en: 'Authentic Shenga Holige with Pure Desi Ghee',
+    name_kn: 'ಸಾಂಪ್ರದಾಯಿಕ ಶೇಂಗಾ ಹೋಳಿಗೆ ತುಪ್ಪದೊಂದಿಗೆ',
+    description_en: 'Traditional North Karnataka sweet flatbread stuffed with roasted peanuts, organic jaggery and cardamom, served with melted pure desi ghee.',
+    description_kn: 'ಹುರಿದ ಶೇಂಗಾ ಮತ್ತು ಬೆಲ್ಲದಿಂದ ತಯಾರಿಸಿದ ಬಿಸಿಬಿಸಿ ಶೇಂಗಾ ಹೋಳಿಗೆ, ಘಮಘಮಿಸುವ ತುಪ್ಪದೊಂದಿಗೆ ಸವಿಯಿರಿ.',
+    base_price: 60,
+    image_url: 'https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 1,
+    preparation_time_minutes: 5,
+    is_bestseller: true,
+    variants: [
+      { id: 'var-10-1', product_id: 'prod-10', name_en: 'Pair with Ghee (2 pcs)', name_kn: '೨ ಹೋಳಿಗೆ ತುಪ್ಪದೊಂದಿಗೆ', price: 60, is_default: true },
+      { id: 'var-10-2', product_id: 'prod-10', name_en: 'Gift Box (5 pcs)', name_kn: '೫ ಹೋಳಿಗೆ ಗಿಫ್ಟ್ ಬಾಕ್ಸ್', price: 140 },
+    ]
+  },
+  {
+    id: 'prod-11',
+    category_id: 'cat-drinks',
+    name_en: 'Original Dharwad Peda (250g Box)',
+    name_kn: 'ಅಸಲಿ ಧಾರವಾಡ್ ಪೇಡಾ (೨೫೦ ಗ್ರಾಂ ಬಾಕ್ಸ್)',
+    description_en: 'Legendary caramelized brown milk fudge coated in fine sugar crystals, crafted using pure Dharwad buffalo milk and traditional roasting.',
+    description_kn: 'ಖ್ಯಾತ ಧಾರವಾಡ್ ಪೇಡಾ, ಶುದ್ಧ ಹಾಲಿನ ಕೋವಾ ಮತ್ತು ಸಾಂಪ್ರದಾಯಿಕ ತಯಾರಿಕಾ ವಿಧಾನದ ಮಧುರ ಸಿಹಿ.',
+    base_price: 130,
+    image_url: 'https://images.unsplash.com/photo-1599785209707-a456fc1337bb?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 1,
+    preparation_time_minutes: 2,
+    variants: [
+      { id: 'var-11-1', product_id: 'prod-11', name_en: 'Box 250g', name_kn: '೨೫೦ ಗ್ರಾಂ ಬಾಕ್ಸ್', price: 130, is_default: true },
+      { id: 'var-11-2', product_id: 'prod-11', name_en: 'Box 500g', name_kn: '೫೦೦ ಗ್ರಾಂ ಬಾಕ್ಸ್', price: 250 },
+    ]
+  },
+  {
+    id: 'prod-12',
+    category_id: 'cat-drinks',
+    name_en: 'Masala Dabha Majjige (Spiced Buttermilk)',
+    name_kn: 'ಮಸಾಲೆ ದಾಬಾ ಮಜ್ಜಿಗೆ',
+    description_en: 'Cooling churned curd tempered with roasted cumin, green chillies, ginger, curry leaves, and pink rock salt.',
+    description_kn: 'ಜೀರಿಗೆ, ಶುಂಠಿ, ಹಸಿಮೆಣಸಿನಕಾಯಿ ಹಾಗೂ ಕರಿಬೇವಿನ ಒಗ್ಗರಣೆ ನೀಡಿದ ತಂಪಾದ ಮಜ್ಜಿಗೆ.',
+    base_price: 35,
+    image_url: 'https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=800&q=80',
+    is_veg: true,
+    is_available: true,
+    spice_level: 1,
+    preparation_time_minutes: 3,
+    variants: [
+      { id: 'var-12-1', product_id: 'prod-12', name_en: 'Glass (300ml)', name_kn: '೧ ಗ್ಲಾಸ್ (೩೦೦ ಮಿಲಿ)', price: 35, is_default: true },
+      { id: 'var-12-2', product_id: 'prod-12', name_en: 'Chilled Bottle (1 Litre)', name_kn: '೧ ಲೀಟರ್ ಬಾಟಲಿ', price: 90 },
+    ]
+  }
+];
+
+export const initialOffers: Offer[] = [
+  {
+    id: 'off-1',
+    code: 'ROTTI50',
+    title_en: 'Flat ₹50 OFF on Dabha Feast',
+    title_kn: 'ದಾಬಾ ಊಟಕ್ಕೆ ಫ್ಲಾಟ್ ₹50 ರಿಯಾಯಿತಿ',
+    description_en: 'Enjoy flat ₹50 discount on any pure veg order above ₹299.',
+    description_kn: '₹299 ಮೇಲಿನ ಯಾವುದೇ ಆರ್ಡರ್‌ಗೆ ಫ್ಲಾಟ್ ₹50 ರಿಯಾಯಿತಿ ಪಡೆಯಿರಿ.',
+    discount_type: 'flat',
+    discount_value: 50,
+    min_order_amount: 299,
+    is_active: true,
+    banner_text_en: 'Use code ROTTI50 for flat ₹50 OFF on orders above ₹299!',
+    banner_text_kn: 'ROTTI50 ಕೂಪನ್ ಬಳಸಿ ₹299 ಮೇಲಿನ ಆರ್ಡರ್‌ಗೆ ₹50 ರಿಯಾಯಿತಿ ಪಡೆಯಿರಿ!'
+  },
+  {
+    id: 'off-2',
+    code: 'PUREVEG15',
+    title_en: '15% OFF Pure Veg Festival',
+    title_kn: 'ಶುದ್ಧ ಸಸ್ಯಾಹಾರಿ ಹಬ್ಬದ 15% ರಿಯಾಯಿತಿ',
+    description_en: '15% instant discount up to ₹100 on orders above ₹499.',
+    description_kn: '₹499 ಮೇಲಿನ ಆರ್ಡರ್‌ಗೆ 15% ತ್ವರಿತ ರಿಯಾಯಿತಿ (ಗರಿಷ್ಠ ₹100).',
+    discount_type: 'percentage',
+    discount_value: 15,
+    min_order_amount: 499,
+    max_discount_amount: 100,
+    is_active: true,
+    banner_text_en: 'Pure Veg Special: Flat 15% OFF with code PUREVEG15!',
+    banner_text_kn: 'PUREVEG15 ಕೋಡ್ ಬಳಸಿ 15% ರಿಯಾಯಿತಿ ಪಡೆಯಿರಿ!'
+  },
+  {
+    id: 'off-3',
+    code: 'FREEDELIVERY',
+    title_en: 'Free Doorstep Delivery',
+    title_kn: 'ಉಚಿತ ಮನೆಬಾಗಿಲಿಗೆ ಡೆಲಿವರಿ',
+    description_en: 'Free delivery on all meals above ₹399.',
+    description_kn: '₹399 ಕ್ಕಿಂತ ಹೆಚ್ಚಿನ ಊಟಕ್ಕೆ ಉಚಿತ ಡೆಲಿವರಿ.',
+    discount_type: 'flat',
+    discount_value: 30, // covers delivery fee
+    min_order_amount: 399,
+    is_active: true,
+    banner_text_en: 'Free Delivery unlocked on orders above ₹399 with FREEDELIVERY',
+    banner_text_kn: '₹399 ಕ್ಕಿಂತ ಹೆಚ್ಚಿನ ಆರ್ಡರ್‌ಗೆ FREEDELIVERY ಕೋಡ್‌ನೊಂದಿಗೆ ಉಚಿತ ಡೆಲಿವರಿ'
+  }
+];
+
+export const defaultSettings = {
+  id: 'settings-1',
+  name_en: 'Basaveshwara Dabha (100% Pure Veg)',
+  name_kn: 'ಬಸವೇಶ್ವರ ದಾಬಾ (೧೦೦% ಶುದ್ಧ ಸಸ್ಯಾಹಾರಿ)',
+  tagline_en: 'Authentic North Karnataka Pure Veg Delicacies & Dabha Flavors',
+  tagline_kn: 'ಅಪ್ಪಟ ಉತ್ತರ ಕರ್ನಾಟಕ ಶೈಲಿಯ ಶುದ್ಧ ಸಸ್ಯಾಹಾರಿ ರುಚಿ & ದಾಬಾ ಸ್ಪೆಷಲ್ ಊಟ',
+  is_open: true,
+  open_time: '11:00 AM',
+  close_time: '11:30 PM',
+  phone_primary: '+91 98450 12345',
+  phone_secondary: '+91 98450 67890',
+  address_display_en: 'Near Basaveshwara Circle, Highway Junction, Hubli-Dharwad Bypass Road, Karnataka',
+  address_display_kn: 'ಬಸವೇಶ್ವರ ವೃತ್ತದ ಬಳಿ, ಹೈವೇ ಜಂಕ್ಷನ್, ಹುಬ್ಬಳ್ಳಿ-ಧಾರವಾಡ ಬೈಪಾಸ್ ರಸ್ತೆ, ಕರ್ನಾಟಕ',
+  delivery_fee_base: 30,
+  delivery_radius_km: 12,
+  free_delivery_above: 499,
+  tax_percentage: 5,
+  alarm_sound_enabled: true,
+  alarm_interval_seconds: 15,
+};
+
+export const sampleDeliveryPartners: DeliveryPartner[] = [
+  { id: 'drv-1', name: 'Manjunath Gowda', phone: '+91 99011 23456', vehicle_type: 'bike', vehicle_number: 'KA-25-EM-4021', status: 'available', current_lat: 15.3647, current_lng: 75.1240 },
+  { id: 'drv-2', name: 'Ravi Kumar Hiremath', phone: '+91 98444 87654', vehicle_type: 'bike', vehicle_number: 'KA-25-EV-8812', status: 'available', current_lat: 15.3680, current_lng: 75.1310 },
+  { id: 'drv-3', name: 'Basavaraj Patil', phone: '+91 94481 99882', vehicle_type: 'scooter', vehicle_number: 'KA-25-EX-1004', status: 'busy', current_lat: 15.3590, current_lng: 75.1180 },
+];

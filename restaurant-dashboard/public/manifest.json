@@ -1,0 +1,19 @@
+{
+  "name": "Basaveshwara Kitchen Admin",
+  "short_name": "BD Admin",
+  "description": "Basaveshwara Dabha Restaurant Management & Live Kitchen Orders",
+  "start_url": "/",
+  "id": "/admin",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

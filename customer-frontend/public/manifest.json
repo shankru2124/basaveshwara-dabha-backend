@@ -1,0 +1,19 @@
+{
+  "name": "Basaveshwara Dabha - Pure Veg Food",
+  "short_name": "Basaveshwara",
+  "description": "Authentic Pure Vegetarian Food Ordering from Basaveshwara Dabha",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#ea580c",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

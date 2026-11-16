@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+customer-frontend/node_modules/
+restaurant-dashboard/node_modules/
+
+# Production builds
+dist/
+dist-ssr/
+customer-frontend/dist/
+restaurant-dashboard/dist/
+
+# Python cache & virtualenvs
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+.pytest_cache/
+
+# Local Environment Variables & Secrets
+.env
+.env*.local
+backend/.env
+customer-frontend/.env
+restaurant-dashboard/.env
+!.env.example
+!backend/.env.example
+!customer-frontend/.env.example
+!restaurant-dashboard/.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

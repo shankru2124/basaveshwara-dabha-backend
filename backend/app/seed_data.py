@@ -1,0 +1,445 @@
+import logging
+from datetime import datetime
+from bson import ObjectId
+from app.database import get_database
+from app.utils.security import get_password_hash
+
+logger = logging.getLogger("basaveshwara.seed")
+
+DEFAULT_CATEGORIES = [
+    {
+        "name": "Breakfast",
+        "slug": "breakfast",
+        "description": "Crisp morning tiffins, steaming idlis and filter coffee.",
+        "image_url": "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80",
+        "display_order": 1,
+        "is_active": True
+    },
+    {
+        "name": "South Indian",
+        "slug": "south-indian",
+        "description": "Authentic Karnataka & South Indian dosas, vadas & sambar.",
+        "image_url": "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=600&q=80",
+        "display_order": 2,
+        "is_active": True
+    },
+    {
+        "name": "North Indian",
+        "slug": "north-indian",
+        "description": "Rich paneer gravies, slow-cooked dals, and tandoori breads.",
+        "image_url": "https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=600&q=80",
+        "display_order": 3,
+        "is_active": True
+    },
+    {
+        "name": "Meals and Thalis",
+        "slug": "meals-thalis",
+        "description": "Grand authentic vegetarian thalis with unlimited joy.",
+        "image_url": "https://images.unsplash.com/photo-1610057099431-d73a1c9d2f2f?auto=format&fit=crop&w=600&q=80",
+        "display_order": 4,
+        "is_active": True
+    },
+    {
+        "name": "Rice Items",
+        "slug": "rice-items",
+        "description": "Fragrant Bisi Bele Bath, Curd Rice and Ghee Pulao.",
+        "image_url": "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80",
+        "display_order": 5,
+        "is_active": True
+    },
+    {
+        "name": "Biriyani (Veg Only)",
+        "slug": "veg-biriyani",
+        "description": "Dum cooked Basmati rice with marinated paneer & fresh veggies.",
+        "image_url": "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=600&q=80",
+        "display_order": 6,
+        "is_active": True
+    },
+    {
+        "name": "Snacks",
+        "slug": "snacks",
+        "description": "Crispy pakodas, samosas, mirchi bhajji & evening snacks.",
+        "image_url": "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80",
+        "display_order": 7,
+        "is_active": True
+    },
+    {
+        "name": "Beverages",
+        "slug": "beverages",
+        "description": "Chilled Badam Milk, Sweet Lassi, Kokum Sherbet and Filter Coffee.",
+        "image_url": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80",
+        "display_order": 8,
+        "is_active": True
+    },
+    {
+        "name": "Desserts",
+        "slug": "desserts",
+        "description": "Hot Gulab Jamun, Mysore Pak, Kesari Bath and Shahi Tukda.",
+        "image_url": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=600&q=80",
+        "display_order": 9,
+        "is_active": True
+    }
+]
+
+DEFAULT_MENU_ITEMS = [
+    # Breakfast & South Indian
+    {
+        "name": "Benne Masala Dosa (Davanagere Butter Dosa)",
+        "description": "Iconic crisp golden dosa smeared with generous aromatic white butter, filled with spiced potato palya and served with coconut chutney.",
+        "category": "South Indian",
+        "price": 120.0,
+        "image_url": "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": True,
+        "preparation_time_minutes": 15,
+        "spicy_level": 2,
+        "calories": 360,
+        "portion_size": "1 Plate (with Sambar & Chutney)"
+    },
+    {
+        "name": "Steaming Thatte Idli with Desi Ghee",
+        "description": "Large disc plate idlis steamed to pillowy perfection, topped with gunpowder podi and a pool of pure desi ghee, served with hot sambar.",
+        "category": "Breakfast",
+        "price": 80.0,
+        "image_url": "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": False,
+        "preparation_time_minutes": 10,
+        "spicy_level": 1,
+        "calories": 240,
+        "portion_size": "2 Pcs"
+    },
+    {
+        "name": "Maddur Vada (Crispy)",
+        "description": "Legendary Karnataka onion, semolina and rice flour crispy cutlet fried with green chillies, curry leaves and roasted peanuts.",
+        "category": "Snacks",
+        "price": 60.0,
+        "image_url": "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": False,
+        "is_today_special": False,
+        "preparation_time_minutes": 12,
+        "spicy_level": 2,
+        "calories": 220,
+        "portion_size": "2 Pcs"
+    },
+    # North Indian
+    {
+        "name": "Paneer Butter Masala (Dabha Style)",
+        "description": "Succulent cubes of malai cottage cheese simmered in a velvet tomato, cashew nut and butter gravy infused with kasoori methi.",
+        "category": "North Indian",
+        "price": 220.0,
+        "image_url": "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": True,
+        "preparation_time_minutes": 20,
+        "spicy_level": 2,
+        "calories": 480,
+        "portion_size": "Serves 2 (400 ml)"
+    },
+    {
+        "name": "Dal Makhani Desi Tadka",
+        "description": "Black lentils and red kidney beans slow-cooked overnight over tandoor embers with churned butter and fresh cream.",
+        "category": "North Indian",
+        "price": 190.0,
+        "image_url": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": False,
+        "preparation_time_minutes": 15,
+        "spicy_level": 1,
+        "calories": 390,
+        "portion_size": "Serves 2"
+    },
+    {
+        "name": "Kaju Curry (Royal Cashew Gravy)",
+        "description": "Whole roasted golden cashews simmered in a mildly sweet, aromatic onion-tomato spiced gravy with saffron threads.",
+        "category": "North Indian",
+        "price": 260.0,
+        "image_url": "https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": False,
+        "is_today_special": False,
+        "preparation_time_minutes": 20,
+        "spicy_level": 2,
+        "calories": 520,
+        "portion_size": "Serves 2"
+    },
+    {
+        "name": "Garlic Butter Naan (2 Pcs)",
+        "description": "Soft leavened tandoori bread brushed with melted butter and sprinkled with minced fresh garlic and coriander leaves.",
+        "category": "North Indian",
+        "price": 70.0,
+        "image_url": "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": False,
+        "preparation_time_minutes": 10,
+        "spicy_level": 1,
+        "calories": 280,
+        "portion_size": "2 Pcs"
+    },
+    # Meals & Thalis
+    {
+        "name": "Basaveshwara Royal Special Thali",
+        "description": "Grand complete spread: 2 Butter Rotis, Paneer Curry, Dal Makhani, Veg Pulao, Curd, Papad, Pickle, Salad and hot Gulab Jamun.",
+        "category": "Meals and Thalis",
+        "price": 280.0,
+        "image_url": "https://images.unsplash.com/photo-1610057099431-d73a1c9d2f2f?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": True,
+        "preparation_time_minutes": 25,
+        "spicy_level": 2,
+        "calories": 850,
+        "portion_size": "1 Grand Full Meal"
+    },
+    {
+        "name": "North Karnataka Jolada Rotti Oota",
+        "description": "Traditional 2 tender Jowar (millet) rottis, Ennegayi (stuffed brinjal curry), Kaalu palya, Shenga (peanut) chutney podi, butter and curd.",
+        "category": "Meals and Thalis",
+        "price": 220.0,
+        "image_url": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": False,
+        "preparation_time_minutes": 20,
+        "spicy_level": 3,
+        "calories": 620,
+        "portion_size": "1 Traditional Meal"
+    },
+    # Rice Items & Veg Biriyani
+    {
+        "name": "Authentic Karnataka Bisi Bele Bath",
+        "description": "Piping hot rice and lentil mash cooked with farm-fresh vegetables, secret dabha spice blend, topped with fried cashews, boondi and ghee.",
+        "category": "Rice Items",
+        "price": 130.0,
+        "image_url": "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": False,
+        "preparation_time_minutes": 15,
+        "spicy_level": 2,
+        "calories": 420,
+        "portion_size": "Serves 1-2 (with Raitha & Papad)"
+    },
+    {
+        "name": "Shahi Paneer Dum Biriyani (Handi)",
+        "description": "Fragrant long-grain aged basmati rice layered with spiced marinated cottage cheese cubes, saffron, mint and brown onions, sealed and slow cooked.",
+        "category": "Biriyani (Veg Only)",
+        "price": 240.0,
+        "image_url": "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": True,
+        "preparation_time_minutes": 25,
+        "spicy_level": 2,
+        "calories": 580,
+        "portion_size": "Handi (with Mirchi ka Salan & Burani Raita)"
+    },
+    # Beverages & Desserts
+    {
+        "name": "Special Badam Milk (Cold / Hot)",
+        "description": "Rich whole milk simmered with crushed almonds, saffron threads, cardamom and pistachio slivers.",
+        "category": "Beverages",
+        "price": 75.0,
+        "image_url": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": False,
+        "preparation_time_minutes": 5,
+        "spicy_level": 1,
+        "calories": 210,
+        "portion_size": "250 ml Glass"
+    },
+    {
+        "name": "Ghee Kesari Bath (Pineapple & Saffron)",
+        "description": "Aromatic roasted semolina sweet cooked in generous pure desi ghee, infused with fresh pineapple chunks, saffron and fried cashews.",
+        "category": "Desserts",
+        "price": 85.0,
+        "image_url": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": False,
+        "preparation_time_minutes": 10,
+        "spicy_level": 1,
+        "calories": 310,
+        "portion_size": "1 Cup (150 gm)"
+    },
+    {
+        "name": "Hot Gulab Jamun with Rabdi",
+        "description": "Golden khoya dumplings soaked in rose-cardamom sugar syrup, served warm over a bed of slow-churned malai rabdi.",
+        "category": "Desserts",
+        "price": 95.0,
+        "image_url": "https://images.unsplash.com/photo-1593798603546-b33379435b7e?auto=format&fit=crop&w=600&q=80",
+        "is_veg": True,
+        "is_available": True,
+        "is_popular": True,
+        "is_today_special": True,
+        "preparation_time_minutes": 8,
+        "spicy_level": 1,
+        "calories": 340,
+        "portion_size": "2 Jamuns with Rabdi"
+    }
+]
+
+DEFAULT_COUPONS = [
+    {
+        "code": "WELCOME50",
+        "discount_type": "percentage",
+        "discount_value": 50.0,
+        "max_discount_amount": 100.0,
+        "min_order_amount": 199.0,
+        "is_active": True,
+        "used_count": 0
+    },
+    {
+        "code": "DABHA20",
+        "discount_type": "percentage",
+        "discount_value": 20.0,
+        "max_discount_amount": 150.0,
+        "min_order_amount": 299.0,
+        "is_active": True,
+        "used_count": 0
+    },
+    {
+        "code": "FLAT100",
+        "discount_type": "fixed",
+        "discount_value": 100.0,
+        "max_discount_amount": 100.0,
+        "min_order_amount": 499.0,
+        "is_active": True,
+        "used_count": 0
+    }
+]
+
+async def seed_initial_data():
+    db = get_database()
+    if db is None:
+        logger.error("Cannot seed: database connection is None")
+        return
+
+    # 1. Seed Admin User
+    admin_user = await db.users.find_one({"email": "admin@basaveshwara.com"})
+    if not admin_user:
+        hashed_pwd = get_password_hash("Admin@123")
+        await db.users.insert_one({
+            "name": "Basaveshwara Admin",
+            "email": "admin@basaveshwara.com",
+            "phone": "9876543210",
+            "password": hashed_pwd,
+            "role": "admin",
+            "created_at": datetime.utcnow().isoformat(),
+            "addresses": []
+        })
+        logger.info("Seeded default admin user: admin@basaveshwara.com / Admin@123")
+
+    # 2. Seed Default Customer for convenience
+    sample_customer = await db.users.find_one({"email": "customer@gmail.com"})
+    if not sample_customer:
+        hashed_pwd = get_password_hash("Customer@123")
+        await db.users.insert_one({
+            "name": "Ramesh Kumar",
+            "email": "customer@gmail.com",
+            "phone": "9845012345",
+            "password": hashed_pwd,
+            "role": "customer",
+            "created_at": datetime.utcnow().isoformat(),
+            "addresses": [
+                {
+                    "id": "addr_1",
+                    "title": "Home",
+                    "address_line": "#42, 3rd Cross, Indiranagar",
+                    "landmark": "Near BDA Complex",
+                    "city": "Bengaluru",
+                    "pincode": "560038"
+                }
+            ]
+        })
+        logger.info("Seeded default customer: customer@gmail.com / Customer@123")
+
+    # 3. Seed Restaurant Settings
+    settings_doc = await db.restaurant_settings.find_one({})
+    if not settings_doc:
+        await db.restaurant_settings.insert_one({
+            "restaurant_name": "Basaveshwara Dabha",
+            "tagline": "Pure Vegetarian Excellence Since 1998",
+            "logo_url": "/uploads/basaveshwara_logo.jpg",
+            "cover_image_url": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=1200&q=80",
+            "description": "Authentic North & South Indian pure vegetarian culinary heritage. Fresh ingredients, zero artificial colours, 100% pure desi ghee.",
+            "phone": "+91 98765 43210",
+            "email": "order@basaveshwaradabha.com",
+            "address": "Basaveshwara Circle, Old Madras Road, Bengaluru, Karnataka 560001",
+            "opening_time": "08:00",
+            "closing_time": "23:00",
+            "is_accepting_orders": True,
+            "closed_reason": "",
+            "min_order_value": 99.0,
+            "delivery_fee": 35.0,
+            "free_delivery_threshold": 499.0,
+            "packaging_fee": 15.0,
+            "tax_percentage": 5.0,
+            "is_pickup_available": True,
+            "is_delivery_available": True,
+            "weekly_off": "None (Open All 7 Days)",
+            "header_top_announcement": "100% Pure Vegetarian Kitchen • Authentic Desi Ghee Flavours",
+            "header_notice": "Special Offers Available: Use WELCOME50 on checkout!",
+            "header_badge_text": "100% Pure Veg",
+            "header_show_announcement": True,
+            "header_show_phone": True,
+            "header_show_timings": True,
+            "header_tagline": "Authentic Pure Vegetarian Flavours",
+            "updated_at": datetime.utcnow().isoformat()
+        })
+        logger.info("Seeded restaurant settings.")
+    else:
+        # Ensure new logo and header settings exist
+        await db.restaurant_settings.update_one({}, {
+            "$set": {
+                "logo_url": "/uploads/basaveshwara_logo.jpg",
+                "header_top_announcement": settings_doc.get("header_top_announcement", "100% Pure Vegetarian Kitchen • Authentic Desi Ghee Flavours"),
+                "header_notice": settings_doc.get("header_notice", "Special Offers Available: Use WELCOME50 on checkout!"),
+                "header_badge_text": settings_doc.get("header_badge_text", "100% Pure Veg"),
+                "header_show_announcement": settings_doc.get("header_show_announcement", True),
+                "header_show_phone": settings_doc.get("header_show_phone", True),
+                "header_show_timings": settings_doc.get("header_show_timings", True),
+                "header_tagline": settings_doc.get("header_tagline", "Authentic Pure Vegetarian Flavours")
+            }
+        })
+
+    # 4. Seed Categories
+    category_count = await db.categories.count_documents({})
+    if category_count == 0:
+        await db.categories.insert_many(DEFAULT_CATEGORIES)
+        logger.info(f"Seeded {len(DEFAULT_CATEGORIES)} categories.")
+
+    # 5. Seed Menu Items
+    menu_count = await db.menu_items.count_documents({})
+    if menu_count == 0:
+        for item in DEFAULT_MENU_ITEMS:
+            item["created_at"] = datetime.utcnow().isoformat()
+            item["updated_at"] = datetime.utcnow().isoformat()
+        await db.menu_items.insert_many(DEFAULT_MENU_ITEMS)
+        logger.info(f"Seeded {len(DEFAULT_MENU_ITEMS)} menu items.")
+
+    # 6. Seed Coupons
+    coupon_count = await db.coupons.count_documents({})
+    if coupon_count == 0:
+        await db.coupons.insert_many(DEFAULT_COUPONS)
+        logger.info(f"Seeded {len(DEFAULT_COUPONS)} coupons.")
