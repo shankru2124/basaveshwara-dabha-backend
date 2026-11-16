@@ -1,15 +1,24 @@
 export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
     const custom = localStorage.getItem('bd_api_url');
-    if (custom) return custom.replace(/\/+$/, '');
+    // Clear stale broken 404 URL if previously stored
+    if (custom && custom.includes('basaveshwara-dabha-api.onrender.com')) {
+      localStorage.removeItem('bd_api_url');
+    } else if (custom) {
+      return custom.replace(/\/+$/, '');
+    }
   }
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
   }
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return 'http://localhost:8000/api';
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    const isLocalOrLan = host === 'localhost' || host === '127.0.0.1' || /^192\.168\./.test(host) || /^10\./.test(host) || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host);
+    if (isLocalOrLan) {
+      return `http://${host}:8000/api`;
+    }
   }
-  return 'https://basaveshwara-dabha-api.onrender.com/api';
+  return 'https://basaveshwara-dabha-backend.onrender.com/api';
 }
 
 export function setCustomApiUrl(url: string): string {
@@ -33,23 +42,33 @@ export function getBackendOrigin(): string {
 export function getWsBaseUrl(): string {
   if (typeof window !== 'undefined') {
     const custom = localStorage.getItem('bd_ws_url');
-    if (custom) return custom.replace(/\/+$/, '');
+    if (custom && custom.includes('basaveshwara-dabha-api.onrender.com')) {
+      localStorage.removeItem('bd_ws_url');
+    } else if (custom) {
+      return custom.replace(/\/+$/, '');
+    }
   }
   if (import.meta.env.VITE_WS_URL) {
     return import.meta.env.VITE_WS_URL.replace(/\/+$/, '');
   }
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return 'ws://localhost:8000';
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    const isLocalOrLan = host === 'localhost' || host === '127.0.0.1' || /^192\.168\./.test(host) || /^10\./.test(host) || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host);
+    if (isLocalOrLan) {
+      return `ws://${host}:8000`;
+    }
   }
   const origin = getBackendOrigin();
   if (origin.startsWith('https://')) return origin.replace('https://', 'wss://');
   if (origin.startsWith('http://')) return origin.replace('http://', 'ws://');
-  return 'wss://basaveshwara-dabha-api.onrender.com';
+  return 'wss://basaveshwara-dabha-backend.onrender.com';
 }
 
 export function resolveImageUrl(url?: string | null): string {
   if (!url) return '/logo.jpg';
-  if (url === '/logo.jpg' || url === 'logo.jpg') return '/logo.jpg';
+  if (url === '/logo.jpg' || url === 'logo.jpg' || url.includes('basaveshwara_logo') || url.includes('logo.')) {
+    return '/logo.jpg';
+  }
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
     return url;
   }
