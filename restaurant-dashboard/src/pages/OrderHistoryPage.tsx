@@ -88,8 +88,9 @@ export const OrderHistoryPage: React.FC<OrderHistoryPageProps> = ({ onViewReceip
             <option value="ACCEPTED">Accepted</option>
             <option value="PREPARING">Preparing</option>
             <option value="READY">Ready</option>
+            <option value="SERVED">Served (Awaiting Bill)</option>
             <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
-            <option value="DELIVERED">Delivered</option>
+            <option value="DELIVERED">Bill Paid / Completed</option>
             <option value="CANCELLED">Cancelled</option>
             <option value="REJECTED">Rejected</option>
           </select>

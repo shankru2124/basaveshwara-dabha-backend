@@ -19,8 +19,9 @@ const STATUS_STEPS = [
   { key: 'ACCEPTED', label: 'Restaurant Accepted', desc: 'Order confirmed by kitchen manager' },
   { key: 'PREPARING', label: 'Preparing Food', desc: 'Chef cooking fresh with pure desi ghee' },
   { key: 'READY', label: 'Ready for Handover', desc: 'Packed hot in insulated packaging' },
+  { key: 'SERVED', label: 'Served • Awaiting Bill', desc: 'Enjoy your meal! Bill will complete after payment' },
   { key: 'OUT_FOR_DELIVERY', label: 'Out for Delivery', desc: 'Restaurant staff en route to your location' },
-  { key: 'DELIVERED', label: 'Delivered / Completed', desc: 'Enjoy your meal!' }
+  { key: 'DELIVERED', label: 'Bill Paid • Completed', desc: 'Thank you for dining with Basaveshwara Dabha!' }
 ];
 
 export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, onBack }) => {
@@ -137,11 +138,11 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
     ? STATUS_STEPS.filter((s) => s.key !== 'OUT_FOR_DELIVERY').map((s) =>
         order.fulfillment_type === 'DINE_IN' && s.key === 'READY'
           ? { ...s, label: 'Ready to Serve', desc: `Plated fresh for ${order.table_number || 'your table'}` }
-          : order.fulfillment_type === 'DINE_IN' && s.key === 'DELIVERED'
-          ? { ...s, label: 'Served to Table', desc: 'Enjoy your pure vegetarian meal!' }
+          : order.fulfillment_type === 'DINE_IN' && s.key === 'SERVED'
+          ? { ...s, label: 'Served at Table', desc: `Served to ${order.table_number || 'your table'} • Pay bill when finished` }
           : s
       )
-    : STATUS_STEPS;
+    : STATUS_STEPS.filter((s) => s.key !== 'SERVED');
 
   const currentStepIndex = filteredSteps.findIndex((s) => s.key === order.order_status);
 

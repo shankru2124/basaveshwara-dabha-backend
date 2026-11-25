@@ -315,7 +315,16 @@ async def test_smart_qr_table_and_dine_in_flow():
         assert sug_res.status_code == 200
         assert sug_res.json()["request"]["order_id"] == order_data["order_id"]
 
-        # 7. Send Call Waiter / Request Bill service request
+        # 7. Mark order SERVED (NOT completed until Bill Paid!)
+        srv_ord = await ac.put(f"/api/restaurant/orders/{order_data['order_id']}/status", json={
+            "status": "SERVED",
+            "note": "Food served at T-01"
+        }, headers=headers)
+        assert srv_ord.status_code == 200
+        assert srv_ord.json()["order_status"] == "SERVED"
+        assert srv_ord.json()["payment_status"] == "PENDING"
+
+        # 8. Send Call Waiter / Request Bill service request
         srv_res = await ac.post("/api/tables/T-01/service-request", json={
             "request_type": "REQUEST_BILL",
             "customer_name": "QR Diner",
@@ -324,12 +333,21 @@ async def test_smart_qr_table_and_dine_in_flow():
         assert srv_res.status_code == 200
         req_id = srv_res.json()["request"]["id"]
 
-        # 8. Admin views tables & resolves service request
+        # 9. Admin views tables (BILLING) then clicks Bill Paid -> DELIVERED
         admin_tables = await ac.get("/api/restaurant/tables", headers=headers)
         assert admin_tables.status_code == 200
         t01 = next(t for t in admin_tables.json() if t["table_number"] == "T-01")
         assert t01["status"] == "BILLING"
 
-        resolve_res = await ac.put(f"/api/restaurant/service-requests/{req_id}/resolve?clear_table=true", headers=headers)
-        assert resolve_res.status_code == 200
-        assert resolve_res.json()["status"] == "RESOLVED"
+        paid_res = await ac.put(f"/api/restaurant/orders/{order_data['order_id']}/status", json={
+            "status": "DELIVERED",
+            "note": "Bill Paid — Order Completed"
+        }, headers=headers)
+        assert paid_res.status_code == 200
+        assert paid_res.json()["order_status"] == "DELIVERED"
+        assert paid_res.json()["payment_status"] == "COMPLETED"
+
+        # Table T-01 automatically returns to AVAILABLE once all its orders are Bill Paid
+        admin_tables_after = await ac.get("/api/restaurant/tables", headers=headers)
+        t01_after = next(t for t in admin_tables_after.json() if t["table_number"] == "T-01")
+        assert t01_after["status"] == "AVAILABLE"

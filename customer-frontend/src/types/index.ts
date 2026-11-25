@@ -59,6 +59,7 @@ export type OrderStatus =
   | 'ACCEPTED'
   | 'PREPARING'
   | 'READY'
+  | 'SERVED'
   | 'OUT_FOR_DELIVERY'
   | 'DELIVERED'
   | 'CANCELLED'

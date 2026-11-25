@@ -400,7 +400,7 @@ async def cancel_order(order_id: str, current_user: dict = Depends(get_current_u
     if order.get("customer_id") != current_user["sub"] and current_user.get("role") not in ["admin", "staff"]:
         raise HTTPException(status_code=403, detail="Unauthorized to cancel this order")
 
-    if order.get("order_status") in [OrderStatus.PREPARING.value, OrderStatus.READY.value, OrderStatus.OUT_FOR_DELIVERY.value, OrderStatus.DELIVERED.value]:
+    if order.get("order_status") in [OrderStatus.PREPARING.value, OrderStatus.READY.value, OrderStatus.SERVED.value, OrderStatus.OUT_FOR_DELIVERY.value, OrderStatus.DELIVERED.value]:
         raise HTTPException(
             status_code=400,
             detail="Order cannot be cancelled because kitchen preparation has already started."

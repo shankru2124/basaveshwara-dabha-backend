@@ -77,7 +77,7 @@ export const OrderHistoryPage: React.FC<OrderHistoryPageProps> = ({
   };
 
   const isOrderActive = (status: string) => {
-    return ['PLACED', 'ACCEPTED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'].includes(status);
+    return ['PLACED', 'ACCEPTED', 'PREPARING', 'READY', 'SERVED', 'OUT_FOR_DELIVERY'].includes(status);
   };
 
   const filteredOrders = orders.filter((o) => {

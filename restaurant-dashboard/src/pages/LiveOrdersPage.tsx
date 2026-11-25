@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Bell, BellRing, Check, X, Clock, ChefHat, Bike, Store, Printer,
-  AlertCircle, Phone, MapPin, ChevronRight, CheckCircle2, User
+  AlertCircle, Phone, MapPin, ChevronRight, CheckCircle2, User, Receipt
 } from 'lucide-react';
 import { Order, OrderStatus, TableServiceRequest } from '../types';
 import { api } from '../services/api';
@@ -40,9 +40,9 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
   const activeOrders = orders.filter((o) => {
     if (filterTab === 'PLACED') return o.order_status === 'PLACED';
     if (filterTab === 'PREPARING') return o.order_status === 'ACCEPTED' || o.order_status === 'PREPARING';
-    if (filterTab === 'READY') return o.order_status === 'READY' || o.order_status === 'OUT_FOR_DELIVERY';
+    if (filterTab === 'READY') return o.order_status === 'READY' || o.order_status === 'SERVED' || o.order_status === 'OUT_FOR_DELIVERY';
     if (filterTab === 'COMPLETED') return o.order_status === 'DELIVERED' || o.order_status === 'CANCELLED';
-    // 'ALL' shows non-delivered or today's
+    // 'ALL' shows non-completed orders (stays active until Bill Paid!)
     return o.order_status !== 'DELIVERED' && o.order_status !== 'CANCELLED' && o.order_status !== 'REJECTED';
   });
 
@@ -96,16 +96,17 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
     }
   };
 
-  const handleAdvanceStatus = async (order: Order, nextStatus: OrderStatus) => {
+  const handleAdvanceStatus = async (order: Order, nextStatus: OrderStatus, customNote?: string) => {
     setIsUpdating(true);
     try {
       const updated = await api.updateOrderStatus(order.order_id, {
         status: nextStatus,
-        note: `Order advanced to ${nextStatus}`
+        note: customNote || `Order advanced to ${nextStatus}`
       });
       onOrderUpdated?.(order.order_id, {
         ...(updated || {}),
-        order_status: nextStatus
+        order_status: nextStatus,
+        payment_status: nextStatus === 'DELIVERED' ? 'COMPLETED' : order.payment_status
       });
       onRefresh();
     } catch (err: any) {
@@ -151,6 +152,7 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
           Cooking in Kitchen ({orders.filter(o => o.order_status === 'ACCEPTED' || o.order_status === 'PREPARING').length})
         </button>
         <button
+          type="button"
           onClick={() => setFilterTab('READY')}
           className={`px-4 py-2 rounded-xl text-xs font-extrabold transition ${
             filterTab === 'READY'
@@ -158,7 +160,7 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
-          Ready / Dispatched ({orders.filter(o => o.order_status === 'READY' || o.order_status === 'OUT_FOR_DELIVERY').length})
+          Ready / Served & Awaiting Bill ({orders.filter(o => o.order_status === 'READY' || o.order_status === 'SERVED' || o.order_status === 'OUT_FOR_DELIVERY').length})
         </button>
         <button
           onClick={() => setFilterTab('COMPLETED')}
@@ -332,8 +334,19 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
 
                 {/* Footer Status Actions */}
                 <div className="p-4 bg-slate-50 border-t border-slate-100 space-y-3">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500 font-medium">Payment: {o.payment_method}</span>
+                  <div className="flex justify-between items-center text-xs gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-500 font-medium">{o.payment_method}</span>
+                      {o.payment_status === 'COMPLETED' ? (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-[10px]">
+                          ✓ PAID
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-black text-[10px]">
+                          ⏳ BILL UNPAID
+                        </span>
+                      )}
+                    </div>
                     <span className="font-black text-base text-slate-900">Total: ₹{o.total_amount}</span>
                   </div>
 
@@ -397,25 +410,43 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleAdvanceStatus(o, 'DELIVERED' as OrderStatus)}
+                        onClick={() =>
+                          handleAdvanceStatus(
+                            o,
+                            'SERVED' as OrderStatus,
+                            o.fulfillment_type === 'DINE_IN'
+                              ? `Food served at ${o.table_number || 'Table'}. Awaiting bill payment.`
+                              : 'Order handed over. Awaiting bill settlement.'
+                          )
+                        }
                         disabled={isUpdating}
-                        className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2"
+                        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2"
                       >
-                        <Check className="w-4 h-4" />
+                        <CheckCircle2 className="w-4 h-4" />
                         {o.fulfillment_type === 'DINE_IN'
-                          ? `Served at ${o.table_number || 'Table'}`
-                          : 'Customer Handover Complete'}
+                          ? `Mark Served at ${o.table_number || 'Table'}`
+                          : 'Handed Over (Awaiting Bill)'}
                       </button>
                     )
-                  ) : o.order_status === 'OUT_FOR_DELIVERY' ? (
-                    <button
-                      onClick={() => handleAdvanceStatus(o, 'DELIVERED' as OrderStatus)}
-                      disabled={isUpdating}
-                      className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2"
-                    >
-                      <Check className="w-4 h-4" />
-                      Mark as Delivered / Completed
-                    </button>
+                  ) : o.order_status === 'SERVED' || o.order_status === 'OUT_FOR_DELIVERY' ? (
+                    <div className="space-y-2">
+                      <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-bold text-center">
+                        {o.order_status === 'SERVED'
+                          ? '🍽️ Food Served • Order stays open until Bill Paid'
+                          : '🛵 Out for Delivery • Confirm Bill Paid on handover'}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleAdvanceStatus(o, 'DELIVERED' as OrderStatus, 'Bill Paid — Order Completed')
+                        }
+                        disabled={isUpdating}
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2"
+                      >
+                        <Receipt className="w-4 h-4" />
+                        Bill Paid • Complete Order
+                      </button>
+                    </div>
                   ) : (
                     <div className="text-center py-1 text-xs font-bold text-slate-500">
                       Order {o.order_status}

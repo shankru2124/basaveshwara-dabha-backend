@@ -103,8 +103,8 @@ async def update_order_status(
     if req.rejection_reason is not None:
         update_data["rejection_reason"] = req.rejection_reason
 
-    # Payment status adjustments for COD or refunds
-    if req.status == OrderStatus.DELIVERED and order.get("payment_method") == "COD":
+    # Payment status adjustments when Bill Paid / Completed or cancelled/refunded
+    if req.status == OrderStatus.DELIVERED:
         update_data["payment_status"] = PaymentStatus.COMPLETED.value
     elif req.status in [OrderStatus.CANCELLED, OrderStatus.REJECTED] and order.get("payment_status") == PaymentStatus.COMPLETED.value:
         update_data["payment_status"] = PaymentStatus.REFUNDED.value
@@ -126,6 +126,29 @@ async def update_order_status(
             }
         }
     )
+
+    # If a Dine-In order is completed (Bill Paid), auto-free table when no active orders remain
+    if req.status in [OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.REJECTED] and order.get("table_number"):
+        t_num = order["table_number"]
+        remaining_count = await db.orders.count_documents({
+            "table_number": t_num,
+            "order_status": {"$nin": ["DELIVERED", "CANCELLED", "REJECTED"]}
+        })
+        if remaining_count == 0:
+            await db.tables.update_one(
+                {"table_number": t_num},
+                {"$set": {"status": "AVAILABLE", "updated_at": now_iso}}
+            )
+            await db.service_requests.update_many(
+                {"table_number": t_num, "request_type": "REQUEST_BILL", "status": "PENDING"},
+                {"$set": {"status": "RESOLVED", "resolved_at": now_iso}}
+            )
+            updated_table = await db.tables.find_one({"table_number": t_num})
+            if updated_table:
+                await ws_manager.broadcast_to_restaurant({
+                    "event": "table_updated",
+                    "table": serialize_doc(updated_table)
+                })
 
     updated_order = await db.orders.find_one({"order_id": order_id})
     serialized = serialize_doc(updated_order)

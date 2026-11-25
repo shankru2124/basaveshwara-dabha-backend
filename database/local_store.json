@@ -4,7 +4,7 @@
       "name": "Basaveshwara Admin",
       "email": "admin@basaveshwara.com",
       "phone": "9876543210",
-      "password": "$2b$12$/JI4O7Bl/4AshOKyJBsrNuGjPoxsB0bkw5piHi/IQAdL/3DAtXy26",
+      "password": "$2b$12$XrZwK1odF1i8QT6V8PGD5eVkNUxlLyH.2M2llcHZWXPhz5R72G4he",
       "role": "admin",
       "created_at": "2026-11-14T17:49:06.344767",
       "addresses": [],
@@ -429,8 +429,8 @@
       "packaging_fee": 15,
       "total_amount": 319.5,
       "payment_method": "COD",
-      "payment_status": "PENDING",
-      "order_status": "ACCEPTED",
+      "payment_status": "COMPLETED",
+      "order_status": "DELIVERED",
       "estimated_prep_time_minutes": 20,
       "status_history": [
         {
@@ -442,10 +442,25 @@
           "status": "ACCEPTED",
           "timestamp": "2026-11-16T09:48:00Z",
           "note": "Kitchen accepted order"
+        },
+        {
+          "status": "PREPARING",
+          "timestamp": "2026-11-25T16:39:01.062097",
+          "note": "Order advanced to PREPARING"
+        },
+        {
+          "status": "READY",
+          "timestamp": "2026-11-25T16:39:03.910265",
+          "note": "Order advanced to READY"
+        },
+        {
+          "status": "DELIVERED",
+          "timestamp": "2026-11-25T16:39:05.009046",
+          "note": "Order advanced to DELIVERED"
         }
       ],
       "created_at": "2026-11-16T09:45:00Z",
-      "updated_at": "2026-11-16T09:48:00Z"
+      "updated_at": "2026-11-25T16:39:05.009046"
     },
     {
       "_id": "order_mock_bd_8842",
@@ -482,17 +497,42 @@
       "total_amount": 665.5,
       "payment_method": "RAZORPAY_UPI",
       "payment_status": "COMPLETED",
-      "order_status": "PLACED",
-      "estimated_prep_time_minutes": 25,
+      "order_status": "DELIVERED",
+      "estimated_prep_time_minutes": 20,
       "status_history": [
         {
           "status": "PLACED",
           "timestamp": "2026-11-16T10:00:00Z",
           "note": "Order placed by customer"
+        },
+        {
+          "status": "ACCEPTED",
+          "timestamp": "2026-11-25T16:31:23.451441",
+          "note": "Order accepted by kitchen. Estimated preparation: 20 minutes."
+        },
+        {
+          "status": "PREPARING",
+          "timestamp": "2026-11-25T16:38:59.593340",
+          "note": "Order advanced to PREPARING"
+        },
+        {
+          "status": "READY",
+          "timestamp": "2026-11-25T16:39:02.355391",
+          "note": "Order advanced to READY"
+        },
+        {
+          "status": "OUT_FOR_DELIVERY",
+          "timestamp": "2026-11-25T16:39:06.814560",
+          "note": "Order advanced to OUT_FOR_DELIVERY"
+        },
+        {
+          "status": "DELIVERED",
+          "timestamp": "2026-11-25T16:39:08.242552",
+          "note": "Order advanced to DELIVERED"
         }
       ],
       "created_at": "2026-11-16T10:00:00Z",
-      "updated_at": "2026-11-16T10:00:00Z"
+      "updated_at": "2026-11-25T16:39:08.242552"
     },
     {
       "order_id": "BD-20261114-4034",
@@ -944,6 +984,128 @@
       "_id": "6af9e4a8c9c54faea7d09169",
       "upi_utr_number": "432109876543",
       "upi_app": "Google Pay"
+    },
+    {
+      "order_id": "BD-20261125-8866",
+      "customer_id": null,
+      "customer_name": "Live Verify Guest",
+      "customer_phone": "9876501122",
+      "customer_email": null,
+      "fulfillment_type": "DINE_IN",
+      "table_number": "T-02",
+      "table_name": "Table 2 \u2022 Center",
+      "delivery_address": null,
+      "order_instructions": null,
+      "items": [
+        {
+          "item_id": "6af89f12b1d94bc122011408",
+          "name": "Benne Masala Dosa (Davanagere Butter Dosa)",
+          "price": 120.0,
+          "quantity": 1,
+          "total": 120.0,
+          "image_url": "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=600&q=80",
+          "category": "South Indian"
+        }
+      ],
+      "subtotal": 120.0,
+      "discount_amount": 0.0,
+      "coupon_code": null,
+      "tax_amount": 2.4,
+      "delivery_fee": 0.0,
+      "packaging_fee": 0.0,
+      "total_amount": 122.4,
+      "payment_method": "COD",
+      "payment_status": "COMPLETED",
+      "order_status": "DELIVERED",
+      "razorpay_order_id": null,
+      "razorpay_payment_id": null,
+      "estimated_prep_time_minutes": 20,
+      "status_history": [
+        {
+          "status": "PLACED",
+          "timestamp": "2026-11-25T16:31:56.285261",
+          "note": "Dine-In order placed at T-02."
+        },
+        {
+          "status": "ACCEPTED",
+          "timestamp": "2026-11-25T16:31:58.359817",
+          "note": "Status transitioned to ACCEPTED by restaurant."
+        },
+        {
+          "status": "DELIVERED",
+          "timestamp": "2026-11-25T16:32:04.517179",
+          "note": "Status transitioned to DELIVERED by restaurant."
+        }
+      ],
+      "created_at": "2026-11-25T16:31:56.285261",
+      "updated_at": "2026-11-25T16:32:04.517179",
+      "_id": "6b070d7c97ad967059d31a49"
+    },
+    {
+      "order_id": "BD-20261125-7319",
+      "customer_id": null,
+      "customer_name": "shankar",
+      "customer_phone": "8660321972",
+      "customer_email": null,
+      "fulfillment_type": "DINE_IN",
+      "table_number": "T-01",
+      "table_name": "Table 1 \u2022 Window View",
+      "delivery_address": null,
+      "order_instructions": null,
+      "items": [
+        {
+          "item_id": "6af89f12b1d94bc122011408",
+          "name": "Benne Masala Dosa (Davanagere Butter Dosa)",
+          "price": 120.0,
+          "quantity": 2,
+          "total": 240.0,
+          "image_url": "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=600&q=80",
+          "category": "South Indian"
+        }
+      ],
+      "subtotal": 240.0,
+      "discount_amount": 100.0,
+      "coupon_code": "WELCOME50",
+      "tax_amount": 2.8,
+      "delivery_fee": 0.0,
+      "packaging_fee": 0.0,
+      "total_amount": 142.8,
+      "payment_method": "COD",
+      "payment_status": "COMPLETED",
+      "order_status": "DELIVERED",
+      "razorpay_order_id": null,
+      "razorpay_payment_id": null,
+      "estimated_prep_time_minutes": 20,
+      "status_history": [
+        {
+          "status": "PLACED",
+          "timestamp": "2026-11-25T16:38:34.229820",
+          "note": "Dine-In order placed at T-01."
+        },
+        {
+          "status": "ACCEPTED",
+          "timestamp": "2026-11-25T16:38:56.778020",
+          "note": "Order accepted by kitchen. Estimated preparation: 20 minutes."
+        },
+        {
+          "status": "PREPARING",
+          "timestamp": "2026-11-25T16:39:09.900180",
+          "note": "Order advanced to PREPARING"
+        },
+        {
+          "status": "READY",
+          "timestamp": "2026-11-25T16:39:11.108587",
+          "note": "Order advanced to READY"
+        },
+        {
+          "status": "DELIVERED",
+          "timestamp": "2026-11-25T16:39:13.911996",
+          "note": "Order advanced to DELIVERED"
+        }
+      ],
+      "created_at": "2026-11-25T16:38:34.229820",
+      "updated_at": "2026-11-25T16:39:13.911996",
+      "_id": "6b070f0a97ad967059d31a4c"
     }
   ],
   "payments": [],
@@ -955,7 +1117,7 @@
       "max_discount_amount": 100.0,
       "min_order_amount": 199.0,
       "is_active": true,
-      "used_count": 5,
+      "used_count": 6,
       "_id": "6af89f12b1d94bc122011416"
     },
     {
@@ -1023,10 +1185,10 @@
       "table_name": "Table 1 \u2022 Window View",
       "capacity": 4,
       "section": "Main Hall",
-      "status": "AVAILABLE",
+      "status": "BILLING",
       "is_active": true,
       "created_at": "2026-11-25T15:54:29.993985",
-      "updated_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T16:40:35.177841",
       "_id": "6b0704b53e5e36b357df6d36"
     },
     {
@@ -1037,7 +1199,7 @@
       "status": "AVAILABLE",
       "is_active": true,
       "created_at": "2026-11-25T15:54:29.993985",
-      "updated_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T16:32:02.467124",
       "_id": "6b0704b53e5e36b357df6d37"
     },
     {
@@ -1127,7 +1289,79 @@
       "created_at": "2026-11-25T15:54:29.993985",
       "updated_at": "2026-11-25T15:54:29.993985",
       "_id": "6b0704b63e5e36b357df6d3f"
+    },
+    {
+      "table_number": "T-11",
+      "table_name": "Table 11",
+      "capacity": 4,
+      "section": "Main Hall",
+      "status": "AVAILABLE",
+      "is_active": true,
+      "created_at": "2026-11-25T16:32:58.014003",
+      "updated_at": "2026-11-25T16:32:58.014003",
+      "_id": "6b070dba97ad967059d31a4b"
     }
   ],
-  "service_requests": []
+  "service_requests": [
+    {
+      "table_number": "T-01",
+      "table_name": "Table 1 \u2022 Window View",
+      "request_type": "REQUEST_BILL",
+      "customer_name": "Table T-01 Guest",
+      "order_id": null,
+      "note": "Guest requested final table bill",
+      "status": "RESOLVED",
+      "created_at": "2026-11-25T16:30:59.348811",
+      "resolved_at": "2026-11-25T16:31:53.670462",
+      "_id": "6b070d4397ad967059d31a48"
+    },
+    {
+      "table_number": "T-02",
+      "table_name": "Table 2 \u2022 Center",
+      "request_type": "CLEAN_TABLE",
+      "customer_name": "Live Verify Guest",
+      "order_id": "BD-20261125-8866",
+      "note": "Please clean Table T-02",
+      "status": "RESOLVED",
+      "created_at": "2026-11-25T16:32:00.426936",
+      "resolved_at": "2026-11-25T16:32:02.467124",
+      "_id": "6b070d8097ad967059d31a4a"
+    },
+    {
+      "table_number": "T-01",
+      "table_name": "Table 1 \u2022 Window View",
+      "request_type": "REQUEST_BILL",
+      "customer_name": "shankar",
+      "order_id": "BD-20261125-7319",
+      "note": "Guest requested final bill",
+      "status": "RESOLVED",
+      "created_at": "2026-11-25T16:39:35.297319",
+      "resolved_at": "2026-11-25T16:39:54.151382",
+      "_id": "6b070f4797ad967059d31a4d"
+    },
+    {
+      "table_number": "T-01",
+      "table_name": "Table 1 \u2022 Window View",
+      "request_type": "REQUEST_BILL",
+      "customer_name": "Table T-01 Guest",
+      "order_id": "BD-20261125-7319",
+      "note": "Guest requested final table bill",
+      "status": "RESOLVED",
+      "created_at": "2026-11-25T16:40:35.177841",
+      "resolved_at": "2026-11-25T16:40:51.776829",
+      "_id": "6b070f8397ad967059d31a4e"
+    },
+    {
+      "table_number": "T-01",
+      "table_name": "Table 1 \u2022 Window View",
+      "request_type": "WATER",
+      "customer_name": "shankar",
+      "order_id": "BD-20261125-7319",
+      "note": "Please bring drinking water",
+      "status": "RESOLVED",
+      "created_at": "2026-11-25T16:54:55.466272",
+      "resolved_at": "2026-11-25T16:55:13.863073",
+      "_id": "6b0712df97ad967059d31a4f"
+    }
+  ]
 }
