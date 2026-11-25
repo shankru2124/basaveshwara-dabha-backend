@@ -21,8 +21,9 @@ interface CartContextType {
   refreshCalculation: () => Promise<void>;
   totalItemCount: number;
   activeTable: RestaurantTable | null;
+  isQrLocked: boolean;
   publicTables: RestaurantTable[];
-  selectTable: (tableNumber: string) => Promise<void>;
+  selectTable: (tableNumber: string, lockedFromQr?: boolean) => Promise<void>;
   clearTable: () => void;
 }
 
@@ -44,12 +45,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [activeTable, setActiveTable] = useState<RestaurantTable | null>(null);
+  const [isQrLocked, setIsQrLocked] = useState<boolean>(false);
   const [publicTables, setPublicTables] = useState<RestaurantTable[]>([]);
 
-  const selectTable = async (tableNumber: string) => {
+  const selectTable = async (tableNumber: string, lockedFromQr: boolean = false) => {
     const clean = tableNumber.trim().toUpperCase();
     if (!clean) return;
     localStorage.setItem('bd_active_table_number', clean);
+    if (lockedFromQr) {
+      localStorage.setItem('bd_qr_locked', 'true');
+      setIsQrLocked(true);
+    }
     setFulfillmentType('DINE_IN');
     try {
       const tbl = await api.getTableByNumber(clean);
@@ -70,6 +76,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearTable = () => {
     localStorage.removeItem('bd_active_table_number');
+    localStorage.removeItem('bd_qr_locked');
+    setIsQrLocked(false);
     setActiveTable(null);
     setFulfillmentType('DELIVERY');
     if (typeof window !== 'undefined' && window.location.search.includes('table=')) {
@@ -88,9 +96,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const params = new URLSearchParams(window.location.search);
       const qrTable = params.get('table') || params.get('qr');
       const savedTable = localStorage.getItem('bd_active_table_number');
-      const target = qrTable || savedTable;
-      if (target) {
-        selectTable(target);
+      const savedLocked = localStorage.getItem('bd_qr_locked') === 'true';
+      if (qrTable) {
+        selectTable(qrTable, true);
+      } else if (savedTable) {
+        selectTable(savedTable, savedLocked);
       }
     }
   }, []);
@@ -205,6 +215,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshCalculation,
         totalItemCount,
         activeTable,
+        isQrLocked,
         publicTables,
         selectTable,
         clearTable

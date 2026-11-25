@@ -21,7 +21,7 @@ declare global {
 
 export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBack }) => {
   const { user } = useAuth();
-  const { items, calculation, fulfillmentType, setFulfillmentType, appliedCoupon, clearCart, activeTable, publicTables, selectTable } = useCart();
+  const { items, calculation, fulfillmentType, setFulfillmentType, appliedCoupon, clearCart, activeTable, isQrLocked, publicTables, selectTable } = useCart();
 
   const [customerName, setCustomerName] = useState(user?.name || '');
   const [customerPhone, setCustomerPhone] = useState(user?.phone || '');
@@ -242,88 +242,111 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
           {/* Fulfillment Type */}
           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
             <h3 className="font-extrabold text-base text-gray-900">1. Order Type</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                type="button"
-                onClick={() => setFulfillmentType('DINE_IN')}
-                className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition ${
-                  fulfillmentType === 'DINE_IN'
-                    ? 'border-emerald-500 bg-emerald-50/60 text-emerald-950 ring-2 ring-emerald-200'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className={`p-2 rounded-xl ${fulfillmentType === 'DINE_IN' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                  <QrCode className="w-5 h-5" />
+            {isQrLocked && activeTable ? (
+              <div className="p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/70 text-emerald-950 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-emerald-600 text-white shrink-0">
+                    <QrCode className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-sm">
+                      Dine-In Order • Table {activeTable.table_number}
+                    </h4>
+                    <p className="text-xs text-emerald-800 font-medium mt-0.5">
+                      {activeTable.table_name} ({activeTable.section}) • Sent straight to kitchen with Table {activeTable.table_number}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm">Dine-In (Table QR)</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {activeTable ? `Table ${activeTable.table_number}` : 'Served hot at your table'}
-                  </p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFulfillmentType('DELIVERY')}
-                className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition ${
-                  fulfillmentType === 'DELIVERY'
-                    ? 'border-brand-500 bg-brand-50/50 text-brand-900'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className={`p-2 rounded-xl ${fulfillmentType === 'DELIVERY' ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                  <Bike className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm">Delivery</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Dispatched by Dabha staff</p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFulfillmentType('PICKUP')}
-                className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition ${
-                  fulfillmentType === 'PICKUP'
-                    ? 'border-brand-500 bg-brand-50/50 text-brand-900'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className={`p-2 rounded-xl ${fulfillmentType === 'PICKUP' ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                  <Store className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm">Self Pickup</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Collect at counter</p>
-                </div>
-              </button>
-            </div>
-
-            {/* Table Selector when Dine-In is chosen */}
-            {fulfillmentType === 'DINE_IN' && (
-              <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2.5">
-                <label className="block text-xs font-extrabold text-emerald-950 uppercase tracking-wider">
-                  Your Dining Table *
-                </label>
-                <select
-                  value={activeTable?.table_number || ''}
-                  onChange={(e) => selectTable(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border border-emerald-300 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-emerald-600"
-                >
-                  <option value="">-- Select Your Table Number --</option>
-                  {publicTables.map((t) => (
-                    <option key={t.table_number} value={t.table_number}>
-                      {t.table_number} — {t.table_name} ({t.section} • {t.capacity} Seats)
-                    </option>
-                  ))}
-                </select>
-                {activeTable && (
-                  <p className="text-[11px] font-bold text-emerald-800">
-                    ✓ Connected to {activeTable.table_number} ({activeTable.section}) • ₹0 delivery & packaging fees applied!
-                  </p>
-                )}
+                <span className="px-3 py-1 rounded-full bg-emerald-600 text-white font-black text-[11px] shrink-0">
+                  TABLE {activeTable.table_number}
+                </span>
               </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFulfillmentType('DINE_IN')}
+                    className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition ${
+                      fulfillmentType === 'DINE_IN'
+                        ? 'border-emerald-500 bg-emerald-50/60 text-emerald-950 ring-2 ring-emerald-200'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-xl ${fulfillmentType === 'DINE_IN' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                      <QrCode className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm">Dine-In (Table)</h4>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {activeTable ? `Table ${activeTable.table_number}` : 'Served hot at your table'}
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFulfillmentType('DELIVERY')}
+                    className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition ${
+                      fulfillmentType === 'DELIVERY'
+                        ? 'border-brand-500 bg-brand-50/50 text-brand-900'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-xl ${fulfillmentType === 'DELIVERY' ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                      <Bike className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm">Delivery</h4>
+                      <p className="text-xs text-gray-500 mt-0.5">Dispatched by Dabha staff</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFulfillmentType('PICKUP')}
+                    className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition ${
+                      fulfillmentType === 'PICKUP'
+                        ? 'border-brand-500 bg-brand-50/50 text-brand-900'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-xl ${fulfillmentType === 'PICKUP' ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                      <Store className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm">Self Pickup</h4>
+                      <p className="text-xs text-gray-500 mt-0.5">Collect at counter</p>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Table Selector when Dine-In is manually chosen without QR */}
+                {fulfillmentType === 'DINE_IN' && (
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2.5">
+                    <label className="block text-xs font-extrabold text-emerald-950 uppercase tracking-wider">
+                      Your Dining Table *
+                    </label>
+                    <select
+                      value={activeTable?.table_number || ''}
+                      onChange={(e) => selectTable(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-white border border-emerald-300 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-emerald-600"
+                    >
+                      <option value="">-- Select Your Table Number --</option>
+                      {publicTables.map((t) => (
+                        <option key={t.table_number} value={t.table_number}>
+                          {t.table_number} — {t.table_name} ({t.section} • {t.capacity} Seats)
+                        </option>
+                      ))}
+                    </select>
+                    {activeTable && (
+                      <p className="text-[11px] font-bold text-emerald-800">
+                        ✓ Connected to {activeTable.table_number} ({activeTable.section}) • ₹0 delivery & packaging fees applied!
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
