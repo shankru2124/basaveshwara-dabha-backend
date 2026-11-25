@@ -39,7 +39,7 @@ export type OrderStatus =
 
 export type PaymentMethod = 'RAZORPAY_UPI' | 'RAZORPAY_CARD' | 'RAZORPAY_NETBANKING' | 'COD';
 export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
-export type FulfillmentType = 'DELIVERY' | 'PICKUP';
+export type FulfillmentType = 'DELIVERY' | 'PICKUP' | 'DINE_IN';
 
 export interface OrderItemDetail {
   item_id: string;
@@ -65,6 +65,8 @@ export interface Order {
   customer_phone: string;
   customer_email?: string;
   fulfillment_type: FulfillmentType;
+  table_number?: string;
+  table_name?: string;
   delivery_address?: {
     title?: string;
     address_line: string;
@@ -179,4 +181,34 @@ export interface AdminUser {
   phone?: string;
   role: string;
   created_at?: string;
+}
+
+export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'BILLING' | 'RESERVED';
+export type ServiceRequestType = 'CALL_WAITER' | 'REQUEST_BILL' | 'WATER' | 'CUTLERY';
+
+export interface RestaurantTable {
+  id: string;
+  table_number: string;
+  table_name: string;
+  capacity: number;
+  section: string;
+  status: TableStatus;
+  is_active: boolean;
+  active_order_count?: number;
+  active_bill_total?: number;
+  pending_requests_count?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TableServiceRequest {
+  id: string;
+  table_number: string;
+  table_name: string;
+  request_type: ServiceRequestType;
+  customer_name?: string;
+  note?: string;
+  status: 'PENDING' | 'RESOLVED';
+  created_at: string;
+  resolved_at?: string | null;
 }

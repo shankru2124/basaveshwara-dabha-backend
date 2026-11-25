@@ -106,8 +106,11 @@ async def calculate_cart(req: CartValidateRequest):
     taxable_amount = max(0.0, subtotal - discount_amount)
     tax_amount = round((taxable_amount * tax_percent) / 100.0, 2)
 
-    # Packaging fee
-    packaging_fee = float(settings.get("packaging_fee", 15.0)) if validated_items else 0.0
+    # Packaging fee (₹0 for Dine-In Table orders)
+    if req.fulfillment_type == FulfillmentType.DINE_IN:
+        packaging_fee = 0.0
+    else:
+        packaging_fee = float(settings.get("packaging_fee", 15.0)) if validated_items else 0.0
 
     # Delivery fee
     delivery_fee = 0.0
@@ -119,7 +122,7 @@ async def calculate_cart(req: CartValidateRequest):
             delivery_fee = 0.0
 
     total_amount = round(max(0.0, subtotal - discount_amount + tax_amount + delivery_fee + packaging_fee), 2)
-    min_order_val = float(settings.get("min_order_value", 99.0))
+    min_order_val = 0.0 if req.fulfillment_type == FulfillmentType.DINE_IN else float(settings.get("min_order_value", 99.0))
     can_place_order = (
         is_accepting
         and len(unavailable_items) == 0

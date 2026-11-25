@@ -102,10 +102,16 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
   // Determine current step index
   const isCancelled = order.order_status === 'CANCELLED';
   const isRejected = order.order_status === 'REJECTED';
-  const isPickup = order.fulfillment_type === 'PICKUP';
+  const isPickupOrDineIn = order.fulfillment_type === 'PICKUP' || order.fulfillment_type === 'DINE_IN';
 
-  const filteredSteps = isPickup
-    ? STATUS_STEPS.filter((s) => s.key !== 'OUT_FOR_DELIVERY')
+  const filteredSteps = isPickupOrDineIn
+    ? STATUS_STEPS.filter((s) => s.key !== 'OUT_FOR_DELIVERY').map((s) =>
+        order.fulfillment_type === 'DINE_IN' && s.key === 'READY'
+          ? { ...s, label: 'Ready to Serve', desc: `Plated fresh for ${order.table_number || 'your table'}` }
+          : order.fulfillment_type === 'DINE_IN' && s.key === 'DELIVERED'
+          ? { ...s, label: 'Served to Table', desc: 'Enjoy your pure vegetarian meal!' }
+          : s
+      )
     : STATUS_STEPS;
 
   const currentStepIndex = filteredSteps.findIndex((s) => s.key === order.order_status);
@@ -138,7 +144,9 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-bold mb-2">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-              Live Real-Time Tracker
+              {order.fulfillment_type === 'DINE_IN'
+                ? `🍽️ Dine-In • ${order.table_number || 'Table Order'}`
+                : 'Live Real-Time Tracker'}
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
               Order #{order.order_id}

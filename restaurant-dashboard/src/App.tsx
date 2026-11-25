@@ -12,12 +12,13 @@ import { CouponsPage } from './pages/CouponsPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SecurityPage } from './pages/SecurityPage';
+import { TablesQrPage } from './pages/TablesQrPage';
 
 import { useAdminAuth } from './context/AdminAuthContext';
-import { Order, MenuItem, Category, AnalyticsDashboard, RestaurantSettings } from './types';
+import { Order, MenuItem, Category, AnalyticsDashboard, RestaurantSettings, RestaurantTable, TableServiceRequest } from './types';
 import { api } from './services/api';
 import { restaurantWs } from './services/websocket';
-import { startOrderAlarm, stopOrderAlarm, onAlarmStateChange } from './utils/audio';
+import { startOrderAlarm, stopOrderAlarm, onAlarmStateChange, playTestSound } from './utils/audio';
 import {
   DEFAULT_SETTINGS,
   DEFAULT_CATEGORIES,
@@ -38,6 +39,8 @@ export const App: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(DEFAULT_ANALYTICS);
   const [settings, setSettings] = useState<RestaurantSettings | null>(DEFAULT_SETTINGS);
+  const [tables, setTables] = useState<RestaurantTable[]>([]);
+  const [serviceRequests, setServiceRequests] = useState<TableServiceRequest[]>([]);
 
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -63,7 +66,9 @@ export const App: React.FC = () => {
         api.getMenu(),
         api.getCategories(),
         api.getAnalyticsDashboard(),
-        api.getSettings()
+        api.getSettings(),
+        api.getTables(),
+        api.getServiceRequests()
       ]);
 
       if (results[0].status === 'fulfilled' && results[0].value?.orders) {
@@ -80,6 +85,12 @@ export const App: React.FC = () => {
       }
       if (results[4].status === 'fulfilled' && results[4].value) {
         setSettings(results[4].value);
+      }
+      if (results[5].status === 'fulfilled' && Array.isArray(results[5].value)) {
+        setTables(results[5].value);
+      }
+      if (results[6].status === 'fulfilled' && Array.isArray(results[6].value)) {
+        setServiceRequests(results[6].value);
       }
     } catch (err) {
       console.error('Error fetching admin data:', err);
@@ -128,6 +139,17 @@ export const App: React.FC = () => {
         api.getAnalyticsDashboard().then(setAnalytics).catch(() => {});
       } else if (data.event === 'restaurant_status_changed' && data.settings) {
         setSettings(data.settings);
+      } else if (data.event === 'table_service_request' && data.request) {
+        setServiceRequests((prev) => [data.request, ...prev.filter((r) => r.id !== data.request.id)]);
+        playTestSound();
+        api.getTables().then(setTables).catch(() => {});
+      } else if (data.event === 'service_request_resolved' && data.request) {
+        setServiceRequests((prev) =>
+          prev.map((r) => (r.id === data.request.id ? data.request : r))
+        );
+        api.getTables().then(setTables).catch(() => {});
+      } else if (data.event === 'table_updated') {
+        api.getTables().then(setTables).catch(() => {});
       }
     });
 
@@ -143,6 +165,8 @@ export const App: React.FC = () => {
   }, []);
 
   const pendingOrdersCount = orders.filter((o) => o.order_status === 'PLACED').length;
+  const pendingServiceRequests = serviceRequests.filter((r) => r.status === 'PENDING');
+  const pendingServiceCount = pendingServiceRequests.length;
 
   const handleToggleAcceptingOrders = async () => {
     if (!settings) return;
@@ -158,6 +182,7 @@ export const App: React.FC = () => {
   const pageTitles: Record<string, { title: string; subtitle: string }> = {
     overview: { title: 'Dashboard Overview', subtitle: 'Live business snapshot, incoming orders, and key metrics' },
     live_orders: { title: 'Live Kitchen Orders', subtitle: 'Real-time kitchen order processing and delivery handover' },
+    tables_qr: { title: 'Smart QR Tables & Floor Control', subtitle: 'Table QR generator, printable tent cards, live occupancy, and waiter calls' },
     menu: { title: 'Food Menu Management', subtitle: 'Catalog pricing, descriptions, food photos, and stock availability' },
     categories: { title: 'Category Management', subtitle: 'Organize and structure the vegetarian menu sections' },
     orders_history: { title: 'Order History', subtitle: 'Comprehensive archive of fulfilled and cancelled orders' },
@@ -177,6 +202,7 @@ export const App: React.FC = () => {
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         pendingOrderCount={pendingOrdersCount}
+        pendingServiceCount={pendingServiceCount}
         isAcceptingOrders={settings?.is_accepting_orders ?? true}
         onToggleAcceptingOrders={handleToggleAcceptingOrders}
         isOpen={isMobileSidebarOpen}
@@ -195,6 +221,7 @@ export const App: React.FC = () => {
           onSelectTab={setCurrentTab}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
           pendingOrderCount={pendingOrdersCount}
+          pendingServiceCount={pendingServiceCount}
         />
 
         <main className="flex-1">
@@ -212,6 +239,14 @@ export const App: React.FC = () => {
               orders={orders}
               onRefresh={loadAllData}
               onViewReceipt={(o) => setViewingReceiptOrder(o)}
+            />
+          )}
+
+          {currentTab === 'tables_qr' && (
+            <TablesQrPage
+              tables={tables}
+              serviceRequests={serviceRequests}
+              onRefresh={loadAllData}
             />
           )}
 
@@ -294,6 +329,31 @@ export const App: React.FC = () => {
               <VolumeX className="w-4 h-4" />
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Floating Table Waiter Call / Bill Request Alert */}
+      {pendingServiceCount > 0 && currentTab !== 'tables_qr' && (
+        <div className="fixed bottom-5 right-5 z-40 max-w-sm w-11/12 bg-slate-900 text-white rounded-3xl p-4 shadow-2xl border-2 border-amber-400 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-900 font-black text-[10px] uppercase">
+                TABLE ALERT ({pendingServiceCount})
+              </span>
+              <span className="font-bold text-xs truncate">
+                {pendingServiceRequests[0].table_number} • {pendingServiceRequests[0].request_type.replace('_', ' ')}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300 truncate mt-0.5">
+              {pendingServiceRequests[0].table_name} needs attention
+            </p>
+          </div>
+          <button
+            onClick={() => setCurrentTab('tables_qr')}
+            className="px-3 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-black text-xs rounded-xl shrink-0 transition"
+          >
+            View Tables
+          </button>
         </div>
       )}
 

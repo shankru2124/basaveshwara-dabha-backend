@@ -73,8 +73,8 @@ async def create_order(req: OrderCreateRequest, optional_user: dict = Depends(ge
             "category": food_doc.get("category")
         })
 
-    # Validate minimum order amount
-    min_order_val = float(settings.get("min_order_value", 99.0))
+    # Validate minimum order amount (waived for Dine-In QR table orders)
+    min_order_val = 0.0 if req.fulfillment_type == FulfillmentType.DINE_IN else float(settings.get("min_order_value", 99.0))
     if subtotal < min_order_val:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -105,7 +105,7 @@ async def create_order(req: OrderCreateRequest, optional_user: dict = Depends(ge
     tax_percent = float(settings.get("tax_percentage", 5.0))
     taxable = max(0.0, subtotal - discount_amount)
     tax_amount = round((taxable * tax_percent) / 100.0, 2)
-    packaging_fee = float(settings.get("packaging_fee", 15.0))
+    packaging_fee = 0.0 if req.fulfillment_type == FulfillmentType.DINE_IN else float(settings.get("packaging_fee", 15.0))
 
     delivery_fee = 0.0
     if req.fulfillment_type == FulfillmentType.DELIVERY:
@@ -119,6 +119,14 @@ async def create_order(req: OrderCreateRequest, optional_user: dict = Depends(ge
     now_iso = datetime.utcnow().isoformat()
 
     customer_id = (optional_user.get("sub") if optional_user else req.customer_id)
+
+    # Resolve table details if Dine-In
+    norm_table_num = req.table_number.strip().upper() if req.table_number else None
+    resolved_table_name = req.table_name
+    if norm_table_num and not resolved_table_name:
+        t_doc = await db.tables.find_one({"table_number": norm_table_num})
+        if t_doc:
+            resolved_table_name = t_doc.get("table_name")
 
     # Payment setup
     is_online = req.payment_method in [PaymentMethod.RAZORPAY_UPI, PaymentMethod.RAZORPAY_CARD, PaymentMethod.RAZORPAY_NETBANKING]
@@ -136,6 +144,8 @@ async def create_order(req: OrderCreateRequest, optional_user: dict = Depends(ge
         "customer_phone": req.customer_phone,
         "customer_email": req.customer_email,
         "fulfillment_type": req.fulfillment_type.value,
+        "table_number": norm_table_num,
+        "table_name": resolved_table_name,
         "delivery_address": req.delivery_address,
         "order_instructions": req.order_instructions,
         "items": order_items,
@@ -156,7 +166,7 @@ async def create_order(req: OrderCreateRequest, optional_user: dict = Depends(ge
             {
                 "status": OrderStatus.PLACED.value,
                 "timestamp": now_iso,
-                "note": "Order placed by customer."
+                "note": f"Dine-In order placed at {norm_table_num}." if norm_table_num else "Order placed by customer."
             }
         ],
         "created_at": now_iso,
@@ -166,15 +176,29 @@ async def create_order(req: OrderCreateRequest, optional_user: dict = Depends(ge
     result = await db.orders.insert_one(order_doc)
     order_doc["id"] = str(result.inserted_id)
 
+    # Mark Dine-In table as OCCUPIED automatically
+    if req.fulfillment_type == FulfillmentType.DINE_IN and norm_table_num:
+        await db.tables.update_one(
+            {"table_number": norm_table_num},
+            {"$set": {"status": "OCCUPIED", "updated_at": now_iso}}
+        )
+        updated_table = await db.tables.find_one({"table_number": norm_table_num})
+        if updated_table:
+            await ws_manager.broadcast_to_restaurant({
+                "event": "table_updated",
+                "table": serialize_doc(updated_table)
+            })
+
     serialized = serialize_doc(order_doc)
 
-    # Only broadcast new_order to restaurant dashboard upfront if COD!
+    # Broadcast new_order to restaurant dashboard upfront for COD / Pay-at-Table!
     # For online / UPI payments, the restaurant should only receive the order AFTER payment succeeds.
     if req.payment_method == PaymentMethod.COD:
+        label = f"New Table {norm_table_num} order" if norm_table_num else "New Cash-on-Delivery order"
         await ws_manager.broadcast_to_restaurant({
             "event": "new_order",
             "order": serialized,
-            "message": f"New Cash-on-Delivery order received: {order_id} (₹{total_amount})"
+            "message": f"{label} received: {order_id} (₹{total_amount})"
         })
 
     upi_id = settings.get("upi_id", "basaveshwaradabha@okaxis")

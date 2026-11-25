@@ -289,5 +289,34 @@ export const api = {
     });
     if (!res.ok) throw new Error('Failed to add address');
     return res.json();
+  },
+
+  // Smart QR Dine-In Table & Waiter/Bill Service
+  async getPublicTables() {
+    const res = await fetch(`${BASE_URL}/tables/public`);
+    if (!res.ok) throw new Error('Failed to fetch tables');
+    return res.json();
+  },
+
+  async getTableByNumber(tableNumber: string) {
+    const res = await fetch(`${BASE_URL}/tables/by-number/${encodeURIComponent(tableNumber)}`);
+    if (!res.ok) throw new Error('Table not found');
+    return res.json();
+  },
+
+  async sendTableServiceRequest(
+    tableNumber: string,
+    payload: { request_type: 'CALL_WAITER' | 'REQUEST_BILL' | 'WATER' | 'CUTLERY'; customer_name?: string; note?: string }
+  ) {
+    const res = await fetch(`${BASE_URL}/tables/${encodeURIComponent(tableNumber)}/service-request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to notify staff');
+    }
+    return res.json();
   }
 };

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CartItem, MenuItem, FulfillmentType } from '../types';
+import { CartItem, MenuItem, FulfillmentType, RestaurantTable } from '../types';
 import { api } from '../services/api';
 import { customerWs } from '../services/websocket';
 import { playSuccessDing } from '../utils/audio';
@@ -20,6 +20,10 @@ interface CartContextType {
   setIsCartOpen: (open: boolean) => void;
   refreshCalculation: () => Promise<void>;
   totalItemCount: number;
+  activeTable: RestaurantTable | null;
+  publicTables: RestaurantTable[];
+  selectTable: (tableNumber: string) => Promise<void>;
+  clearTable: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -39,6 +43,57 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [calculation, setCalculation] = useState<any>(null);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
+  const [activeTable, setActiveTable] = useState<RestaurantTable | null>(null);
+  const [publicTables, setPublicTables] = useState<RestaurantTable[]>([]);
+
+  const selectTable = async (tableNumber: string) => {
+    const clean = tableNumber.trim().toUpperCase();
+    if (!clean) return;
+    localStorage.setItem('bd_active_table_number', clean);
+    setFulfillmentType('DINE_IN');
+    try {
+      const tbl = await api.getTableByNumber(clean);
+      setActiveTable(tbl);
+    } catch {
+      // Fallback lightweight table object if backend is temporarily unreachable
+      setActiveTable({
+        id: clean,
+        table_number: clean,
+        table_name: `Table ${clean}`,
+        capacity: 4,
+        section: 'Main Hall',
+        status: 'OCCUPIED',
+        is_active: true
+      });
+    }
+  };
+
+  const clearTable = () => {
+    localStorage.removeItem('bd_active_table_number');
+    setActiveTable(null);
+    setFulfillmentType('DELIVERY');
+    if (typeof window !== 'undefined' && window.location.search.includes('table=')) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('table');
+      url.searchParams.delete('qr');
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
+
+  // Detect Smart QR URL (?table=T-01 or ?qr=T-01) and load public table list on mount
+  useEffect(() => {
+    api.getPublicTables().then(setPublicTables).catch(() => {});
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const qrTable = params.get('table') || params.get('qr');
+      const savedTable = localStorage.getItem('bd_active_table_number');
+      const target = qrTable || savedTable;
+      if (target) {
+        selectTable(target);
+      }
+    }
+  }, []);
 
   // Save to localStorage
   useEffect(() => {
@@ -148,7 +203,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isCartOpen,
         setIsCartOpen,
         refreshCalculation,
-        totalItemCount
+        totalItemCount,
+        activeTable,
+        publicTables,
+        selectTable,
+        clearTable
       }}
     >
       {children}

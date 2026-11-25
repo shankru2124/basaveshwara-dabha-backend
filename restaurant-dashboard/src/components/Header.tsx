@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wifi, WifiOff, RefreshCw, Menu, LayoutDashboard, BellRing, UtensilsCrossed, Settings, Layers, History } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, Menu, LayoutDashboard, BellRing, UtensilsCrossed, Settings, Layers, History, QrCode } from 'lucide-react';
 import { InstallAdminAppButton } from './InstallAdminAppButton';
 
 interface HeaderProps {
@@ -12,6 +12,7 @@ interface HeaderProps {
   onSelectTab: (tab: string) => void;
   onToggleMobileSidebar: () => void;
   pendingOrderCount: number;
+  pendingServiceCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,11 +24,13 @@ export const Header: React.FC<HeaderProps> = ({
   currentTab,
   onSelectTab,
   onToggleMobileSidebar,
-  pendingOrderCount
+  pendingOrderCount,
+  pendingServiceCount = 0
 }) => {
   const quickNav = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'live_orders', label: 'Live Orders', icon: BellRing, badge: pendingOrderCount > 0 ? pendingOrderCount : undefined },
+    { id: 'tables_qr', label: 'Tables & Smart QRs', icon: QrCode, badge: pendingServiceCount > 0 ? pendingServiceCount : undefined },
     { id: 'menu', label: 'Food Menu', icon: UtensilsCrossed },
     { id: 'settings', label: 'Restaurant Settings', icon: Settings },
     { id: 'categories', label: 'Categories', icon: Layers },

@@ -251,3 +251,66 @@ async def test_image_upload_and_qr_handling():
         assert "url" in data
         assert data["url"].startswith("/uploads/")
         assert data["filename"].endswith(".png")
+
+@pytest.mark.asyncio
+async def test_smart_qr_table_and_dine_in_flow():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        # 1. Public tables list contains seeded QR tables
+        pub_res = await ac.get("/api/tables/public")
+        assert pub_res.status_code == 200
+        tables = pub_res.json()
+        assert len(tables) >= 10
+        assert any(t["table_number"] == "T-01" for t in tables)
+
+        # 2. Fetch specific QR table T-01
+        t_res = await ac.get("/api/tables/by-number/T-01")
+        assert t_res.status_code == 200
+        assert t_res.json()["table_number"] == "T-01"
+
+        # 3. Calculate Dine-In cart (should have 0 delivery & 0 packaging fees)
+        menu_res = await ac.get("/api/menu/items?available_only=true")
+        test_item = menu_res.json()[0]
+        calc_res = await ac.post("/api/cart/calculate", json={
+            "items": [{"item_id": test_item["id"], "quantity": 1}],
+            "fulfillment_type": "DINE_IN"
+        })
+        assert calc_res.status_code == 200
+        calc_data = calc_res.json()
+        assert calc_data["delivery_fee"] == 0.0
+        assert calc_data["packaging_fee"] == 0.0
+        assert calc_data["can_place_order"] is True
+
+        # 4. Place a Dine-In QR order at T-01
+        order_res = await ac.post("/api/orders", json={
+            "customer_name": "QR Diner",
+            "customer_phone": "9876543211",
+            "fulfillment_type": "DINE_IN",
+            "table_number": "T-01",
+            "payment_method": "COD",
+            "items": [{"item_id": test_item["id"], "quantity": 1}]
+        })
+        assert order_res.status_code == 200
+        order_data = order_res.json()["order"]
+        assert order_data["fulfillment_type"] == "DINE_IN"
+        assert order_data["table_number"] == "T-01"
+        assert order_data["packaging_fee"] == 0.0
+
+        # 5. Send Call Waiter / Request Bill service request
+        srv_res = await ac.post("/api/tables/T-01/service-request", json={
+            "request_type": "REQUEST_BILL",
+            "customer_name": "QR Diner",
+            "note": "Ready to pay"
+        })
+        assert srv_res.status_code == 200
+        req_id = srv_res.json()["request"]["id"]
+
+        # 6. Admin views tables & resolves service request
+        headers = {"Authorization": "Bearer basaveshwara_direct_master_admin_token"}
+        admin_tables = await ac.get("/api/restaurant/tables", headers=headers)
+        assert admin_tables.status_code == 200
+        t01 = next(t for t in admin_tables.json() if t["table_number"] == "T-01")
+        assert t01["status"] == "BILLING"
+
+        resolve_res = await ac.put(f"/api/restaurant/service-requests/{req_id}/resolve?clear_table=true", headers=headers)
+        assert resolve_res.status_code == 200
+        assert resolve_res.json()["status"] == "RESOLVED"

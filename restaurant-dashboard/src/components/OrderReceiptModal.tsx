@@ -48,7 +48,10 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({ order, onC
             <p><strong>Order ID:</strong> {order.order_id}</p>
             <p><strong>Date:</strong> {new Date(order.created_at).toLocaleString()}</p>
             <p><strong>Customer:</strong> {order.customer_name} ({order.customer_phone})</p>
-            <p><strong>Type:</strong> {order.fulfillment_type}</p>
+            <p><strong>Type:</strong> {order.fulfillment_type === 'DINE_IN' ? 'DINE-IN (TABLE QR)' : order.fulfillment_type}</p>
+            {order.table_number && (
+              <p><strong>Table:</strong> {order.table_number}{order.table_name ? ` (${order.table_name})` : ''}</p>
+            )}
             {order.delivery_address && (
               <p><strong>Address:</strong> {order.delivery_address.address_line}, {order.delivery_address.city}</p>
             )}

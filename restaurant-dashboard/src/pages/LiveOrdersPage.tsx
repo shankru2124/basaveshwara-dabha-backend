@@ -194,9 +194,15 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
 
                     <div className="flex items-center gap-1.5">
                       <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                        o.fulfillment_type === 'DELIVERY' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                        o.fulfillment_type === 'DINE_IN'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          : o.fulfillment_type === 'DELIVERY'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-amber-100 text-amber-800'
                       }`}>
-                        {o.fulfillment_type}
+                        {o.fulfillment_type === 'DINE_IN'
+                          ? `🍽️ DINE-IN${o.table_number ? ` • ${o.table_number}` : ''}`
+                          : o.fulfillment_type}
                       </span>
                       <button
                         onClick={() => onViewReceipt(o)}
@@ -318,7 +324,9 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
                         className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2"
                       >
                         <Check className="w-4 h-4" />
-                        Customer Handover Complete
+                        {o.fulfillment_type === 'DINE_IN'
+                          ? `Served at ${o.table_number || 'Table'}`
+                          : 'Customer Handover Complete'}
                       </button>
                     )
                   ) : o.order_status === 'OUT_FOR_DELIVERY' ? (

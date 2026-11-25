@@ -29,6 +29,7 @@ class PaymentStatus(str, Enum):
 class FulfillmentType(str, Enum):
     DELIVERY = "DELIVERY"
     PICKUP = "PICKUP"
+    DINE_IN = "DINE_IN"
 
 class OrderItemInput(BaseModel):
     item_id: str
@@ -54,6 +55,8 @@ class OrderCreateRequest(BaseModel):
     customer_phone: str
     customer_email: Optional[str] = None
     fulfillment_type: FulfillmentType = FulfillmentType.DELIVERY
+    table_number: Optional[str] = None
+    table_name: Optional[str] = None
     delivery_address: Optional[dict] = None
     order_instructions: Optional[str] = None
     coupon_code: Optional[str] = None
@@ -88,6 +91,8 @@ class OrderResponse(BaseModel):
     customer_phone: str
     customer_email: Optional[str] = None
     fulfillment_type: FulfillmentType
+    table_number: Optional[str] = None
+    table_name: Optional[str] = None
     delivery_address: Optional[dict] = None
     order_instructions: Optional[str] = None
     items: List[OrderItemDetail]

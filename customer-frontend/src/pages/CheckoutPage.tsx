@@ -21,7 +21,7 @@ declare global {
 
 export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBack }) => {
   const { user } = useAuth();
-  const { items, calculation, fulfillmentType, setFulfillmentType, appliedCoupon, clearCart } = useCart();
+  const { items, calculation, fulfillmentType, setFulfillmentType, appliedCoupon, clearCart, activeTable, publicTables, selectTable } = useCart();
 
   const [customerName, setCustomerName] = useState(user?.name || '');
   const [customerPhone, setCustomerPhone] = useState(user?.phone || '');
@@ -85,7 +85,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
       return;
     }
 
-    if (!customerName.trim() || !customerPhone.trim()) {
+    if (fulfillmentType === 'DINE_IN' && !activeTable?.table_number) {
+      setErrorMessage('Please select your dining table number.');
+      return;
+    }
+
+    if (fulfillmentType !== 'DINE_IN' && (!customerName.trim() || !customerPhone.trim())) {
       setErrorMessage('Please provide your name and contact number.');
       return;
     }
@@ -99,10 +104,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
 
     try {
       const orderPayload = {
-        customer_name: customerName,
-        customer_phone: customerPhone,
+        customer_name: customerName.trim() || (activeTable ? `Table ${activeTable.table_number} Guest` : 'Guest'),
+        customer_phone: customerPhone.trim() || 'Dine-In Guest',
         customer_email: customerEmail || undefined,
         fulfillment_type: fulfillmentType,
+        table_number: fulfillmentType === 'DINE_IN' ? activeTable?.table_number : undefined,
+        table_name: fulfillmentType === 'DINE_IN' ? activeTable?.table_name : undefined,
         delivery_address:
           fulfillmentType === 'DELIVERY'
             ? {
@@ -235,7 +242,27 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
           {/* Fulfillment Type */}
           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
             <h3 className="font-extrabold text-base text-gray-900">1. Order Type</h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => setFulfillmentType('DINE_IN')}
+                className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition ${
+                  fulfillmentType === 'DINE_IN'
+                    ? 'border-emerald-500 bg-emerald-50/60 text-emerald-950 ring-2 ring-emerald-200'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className={`p-2 rounded-xl ${fulfillmentType === 'DINE_IN' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                  <QrCode className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm">Dine-In (Table QR)</h4>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {activeTable ? `Table ${activeTable.table_number}` : 'Served hot at your table'}
+                  </p>
+                </div>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setFulfillmentType('DELIVERY')}
@@ -249,8 +276,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
                   <Bike className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm">Restaurant Delivery</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Dispatched directly by Dabha staff</p>
+                  <h4 className="font-bold text-sm">Delivery</h4>
+                  <p className="text-xs text-gray-500 mt-0.5">Dispatched by Dabha staff</p>
                 </div>
               </button>
 
@@ -268,21 +295,51 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
                 </div>
                 <div>
                   <h4 className="font-bold text-sm">Self Pickup</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Collect hot at the counter</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Collect at counter</p>
                 </div>
               </button>
             </div>
+
+            {/* Table Selector when Dine-In is chosen */}
+            {fulfillmentType === 'DINE_IN' && (
+              <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2.5">
+                <label className="block text-xs font-extrabold text-emerald-950 uppercase tracking-wider">
+                  Your Dining Table *
+                </label>
+                <select
+                  value={activeTable?.table_number || ''}
+                  onChange={(e) => selectTable(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white border border-emerald-300 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-emerald-600"
+                >
+                  <option value="">-- Select Your Table Number --</option>
+                  {publicTables.map((t) => (
+                    <option key={t.table_number} value={t.table_number}>
+                      {t.table_number} — {t.table_name} ({t.section} • {t.capacity} Seats)
+                    </option>
+                  ))}
+                </select>
+                {activeTable && (
+                  <p className="text-[11px] font-bold text-emerald-800">
+                    ✓ Connected to {activeTable.table_number} ({activeTable.section}) • ₹0 delivery & packaging fees applied!
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Contact Details */}
           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-            <h3 className="font-extrabold text-base text-gray-900">2. Contact Details</h3>
+            <h3 className="font-extrabold text-base text-gray-900">
+              2. {fulfillmentType === 'DINE_IN' ? 'Guest Details & Cooking Notes' : 'Contact Details'}
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Your Name *</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  Your Name {fulfillmentType === 'DINE_IN' ? '(Optional)' : '*'}
+                </label>
                 <input
                   type="text"
-                  required
+                  required={fulfillmentType !== 'DINE_IN'}
                   placeholder="e.g. Ramesh Kumar"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
@@ -291,10 +348,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Mobile Number *</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  Mobile Number {fulfillmentType === 'DINE_IN' ? '(Optional)' : '*'}
+                </label>
                 <input
                   type="tel"
-                  required
+                  required={fulfillmentType !== 'DINE_IN'}
                   placeholder="10-digit mobile number"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
@@ -302,16 +361,29 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
                 />
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address (for Receipt)</label>
-                <input
-                  type="email"
-                  placeholder="name@example.com"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-500 focus:bg-white"
-                />
-              </div>
+              {fulfillmentType === 'DINE_IN' ? (
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Cooking Preferences / Table Note</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Less spicy, serve starter first, Jain prep"
+                    value={orderInstructions}
+                    onChange={(e) => setOrderInstructions(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-500 focus:bg-white"
+                  />
+                </div>
+              ) : (
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address (for Receipt)</label>
+                  <input
+                    type="email"
+                    placeholder="name@example.com"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-500 focus:bg-white"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -439,8 +511,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onOrderSuccess, onBa
                     className="text-brand-600 focus:ring-brand-500"
                   />
                   <div>
-                    <h4 className="font-bold text-sm">Cash on Delivery (COD)</h4>
-                    <p className="text-xs text-gray-500 mt-0.5">Pay cash when food is delivered</p>
+                    <h4 className="font-bold text-sm">
+                      {fulfillmentType === 'DINE_IN' ? 'Pay at Table / Counter Bill' : 'Cash on Delivery (COD)'}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {fulfillmentType === 'DINE_IN'
+                        ? 'Order goes straight to kitchen • Settle bill after meal'
+                        : 'Pay cash when food is delivered'}
+                    </p>
                   </div>
                 </div>
                 <Banknote className="w-5 h-5 text-emerald-600 shrink-0" />

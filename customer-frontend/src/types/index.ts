@@ -66,7 +66,7 @@ export type OrderStatus =
 
 export type PaymentMethod = 'RAZORPAY_UPI' | 'RAZORPAY_CARD' | 'RAZORPAY_NETBANKING' | 'COD' | 'DIRECT_QR';
 export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
-export type FulfillmentType = 'DELIVERY' | 'PICKUP';
+export type FulfillmentType = 'DELIVERY' | 'PICKUP' | 'DINE_IN';
 
 export interface OrderItemDetail {
   item_id: string;
@@ -92,6 +92,8 @@ export interface Order {
   customer_phone: string;
   customer_email?: string;
   fulfillment_type: FulfillmentType;
+  table_number?: string;
+  table_name?: string;
   delivery_address?: Address;
   order_instructions?: string;
   items: OrderItemDetail[];
@@ -162,4 +164,15 @@ export interface Coupon {
   max_discount_amount?: number;
   min_order_amount: number;
   is_active: boolean;
+}
+
+export interface RestaurantTable {
+  id: string;
+  table_number: string;
+  table_name: string;
+  capacity: number;
+  section: string;
+  status: 'AVAILABLE' | 'OCCUPIED' | 'BILLING' | 'RESERVED';
+  is_active: boolean;
+  active_orders?: Order[];
 }

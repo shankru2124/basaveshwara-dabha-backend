@@ -12,7 +12,7 @@ from app.database import db_manager
 from app.seed_data import seed_initial_data
 from app.websocket_manager import ws_manager
 
-from app.routers import auth, menu, cart, orders, restaurant, coupons, analytics, upload
+from app.routers import auth, menu, cart, orders, restaurant, coupons, analytics, upload, tables
 
 logging.basicConfig(
     level=logging.INFO,
@@ -80,6 +80,7 @@ app.include_router(restaurant.router, prefix=settings.API_PREFIX)
 app.include_router(coupons.router, prefix=settings.API_PREFIX)
 app.include_router(analytics.router, prefix=settings.API_PREFIX)
 app.include_router(upload.router, prefix=settings.API_PREFIX)
+app.include_router(tables.router, prefix=settings.API_PREFIX)
 
 @app.get("/")
 async def root():

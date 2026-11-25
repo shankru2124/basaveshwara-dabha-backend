@@ -329,6 +329,19 @@ DEFAULT_COUPONS = [
     }
 ]
 
+DEFAULT_TABLES = [
+    {"table_number": "T-01", "table_name": "Table 1 • Window View", "capacity": 4, "section": "Main Hall", "status": "AVAILABLE", "is_active": True},
+    {"table_number": "T-02", "table_name": "Table 2 • Center", "capacity": 4, "section": "Main Hall", "status": "AVAILABLE", "is_active": True},
+    {"table_number": "T-03", "table_name": "Table 3 • Corner", "capacity": 2, "section": "Main Hall", "status": "AVAILABLE", "is_active": True},
+    {"table_number": "T-04", "table_name": "Table 4 • Family", "capacity": 6, "section": "Main Hall", "status": "AVAILABLE", "is_active": True},
+    {"table_number": "T-05", "table_name": "Table 5 • Express", "capacity": 2, "section": "Main Hall", "status": "AVAILABLE", "is_active": True},
+    {"table_number": "T-06", "table_name": "Table 6 • AC Dining", "capacity": 4, "section": "AC Family Hall", "status": "AVAILABLE", "is_active": True},
+    {"table_number": "T-07", "table_name": "Table 7 • AC Dining", "capacity": 4, "section": "AC Family Hall", "status": "AVAILABLE", "is_active": True},
+    {"table_number": "T-08", "table_name": "Table 8 • Grand Booth", "capacity": 8, "section": "AC Family Hall", "status": "AVAILABLE", "is_active": True},
+    {"table_number": "T-09", "table_name": "Table 9 • Garden Breeze", "capacity": 4, "section": "Garden Patio", "status": "AVAILABLE", "is_active": True},
+    {"table_number": "T-10", "table_name": "Table 10 • Garden Patio", "capacity": 6, "section": "Garden Patio", "status": "AVAILABLE", "is_active": True},
+]
+
 async def seed_initial_data():
     db = get_database()
     if db is None:
@@ -461,3 +474,16 @@ async def seed_initial_data():
     if coupon_count == 0:
         await db.coupons.insert_many(DEFAULT_COUPONS)
         logger.info(f"Seeded {len(DEFAULT_COUPONS)} coupons.")
+
+    # 7. Seed Smart QR Dining Tables
+    table_count = await db.tables.count_documents({})
+    if table_count == 0:
+        now_str = datetime.utcnow().isoformat()
+        tables_to_seed = []
+        for t in DEFAULT_TABLES:
+            doc = dict(t)
+            doc["created_at"] = now_str
+            doc["updated_at"] = now_str
+            tables_to_seed.append(doc)
+        await db.tables.insert_many(tables_to_seed)
+        logger.info(f"Seeded {len(tables_to_seed)} Smart QR dining tables.")

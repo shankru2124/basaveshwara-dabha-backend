@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   LayoutDashboard, BellRing, UtensilsCrossed, Layers, History,
-  Users, Tag, BarChart3, Settings, ShieldCheck, Power, X, Volume2
+  Users, Tag, BarChart3, Settings, ShieldCheck, Power, X, Volume2, QrCode
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { playTestSound, requestNotificationPermission } from '../utils/audio';
@@ -11,6 +11,7 @@ interface SidebarProps {
   currentTab: string;
   onSelectTab: (tab: string) => void;
   pendingOrderCount: number;
+  pendingServiceCount?: number;
   isAcceptingOrders: boolean;
   onToggleAcceptingOrders: () => void;
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentTab,
   onSelectTab,
   pendingOrderCount,
+  pendingServiceCount = 0,
   isAcceptingOrders,
   onToggleAcceptingOrders,
   isOpen,
@@ -36,6 +38,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: BellRing,
       badge: pendingOrderCount > 0 ? pendingOrderCount : undefined,
       badgeColor: 'bg-red-500'
+    },
+    {
+      id: 'tables_qr',
+      label: 'Tables & Smart QRs',
+      icon: QrCode,
+      badge: pendingServiceCount > 0 ? pendingServiceCount : undefined,
+      badgeColor: 'bg-amber-500'
     },
     { id: 'menu', label: 'Food Menu Management', icon: UtensilsCrossed },
     { id: 'categories', label: 'Category Management', icon: Layers },

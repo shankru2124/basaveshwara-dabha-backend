@@ -60,6 +60,8 @@ class DatabaseManager:
             await cls.db.menu_items.create_index("is_available")
             # coupons
             await cls.db.coupons.create_index("code", unique=True)
+            # tables
+            await cls.db.tables.create_index("table_number", unique=True)
         except Exception as err:
             logger.warning(f"Index creation notice: {err}")
 
@@ -69,7 +71,11 @@ class DatabaseManager:
             return
         try:
             data = {}
-            collections = ["users", "restaurants", "categories", "menu_items", "orders", "payments", "coupons", "addresses", "notifications", "restaurant_settings"]
+            collections = [
+                "users", "restaurants", "categories", "menu_items", "orders",
+                "payments", "coupons", "addresses", "notifications",
+                "restaurant_settings", "tables", "service_requests"
+            ]
             for col_name in collections:
                 cursor = cls.db[col_name].find({})
                 docs = await cursor.to_list(length=10000)

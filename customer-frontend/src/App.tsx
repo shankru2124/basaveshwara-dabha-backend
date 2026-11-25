@@ -5,6 +5,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { AuthModal } from './components/AuthModal';
 import { InstallAppButton } from './components/InstallAppButton';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { SmartTableBanner } from './components/SmartTableBanner';
 import { HomePage } from './pages/HomePage';
 import { MenuPage } from './pages/MenuPage';
 import { CheckoutPage } from './pages/CheckoutPage';
@@ -18,7 +19,12 @@ import { useCart } from './context/CartContext';
 
 export const App: React.FC = () => {
   const { totalItemCount, setIsCartOpen } = useCart();
-  const [currentPage, setCurrentPage] = useState<string>('home');
+  const [currentPage, setCurrentPage] = useState<string>(() => {
+    if (typeof window !== 'undefined' && (window.location.search.includes('table=') || window.location.search.includes('qr='))) {
+      return 'menu';
+    }
+    return 'home';
+  });
   const [activeTrackingOrderId, setActiveTrackingOrderId] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
@@ -87,6 +93,9 @@ export const App: React.FC = () => {
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onNavigate={handleNavigate}
       />
+
+      {/* Smart QR Dine-In Table Bar */}
+      <SmartTableBanner />
 
       {/* Main View Router */}
       <main className="flex-1 pb-24 md:pb-0">

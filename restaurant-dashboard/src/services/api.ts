@@ -607,5 +607,72 @@ export const api = {
       throw new Error(errData.detail || `Upload failed with status ${res.status}`);
     }
     return res.json();
+  },
+
+  // Smart QR Tables & Waiter/Bill Service Requests
+  async getTables() {
+    const res = await fetch(`${getBaseUrl()}/restaurant/tables`, {
+      headers: { ...getAuthHeader() }
+    });
+    if (!res.ok) throw new Error('Failed to fetch tables');
+    return res.json();
+  },
+
+  async createTable(data: { table_number: string; table_name: string; capacity: number; section: string; status?: string; is_active?: boolean }) {
+    const res = await fetch(`${getBaseUrl()}/restaurant/tables`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to create table');
+    }
+    return res.json();
+  },
+
+  async updateTable(tableId: string, data: any) {
+    const res = await fetch(`${getBaseUrl()}/restaurant/tables/${tableId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to update table');
+    }
+    return res.json();
+  },
+
+  async deleteTable(tableId: string) {
+    const res = await fetch(`${getBaseUrl()}/restaurant/tables/${tableId}`, {
+      method: 'DELETE',
+      headers: { ...getAuthHeader() }
+    });
+    if (!res.ok) throw new Error('Failed to delete table');
+    return res.json();
+  },
+
+  async getServiceRequests() {
+    const res = await fetch(`${getBaseUrl()}/restaurant/service-requests`, {
+      headers: { ...getAuthHeader() }
+    });
+    if (!res.ok) throw new Error('Failed to fetch service requests');
+    return res.json();
+  },
+
+  async resolveServiceRequest(reqId: string, clearTable: boolean = false) {
+    const res = await fetch(`${getBaseUrl()}/restaurant/service-requests/${reqId}/resolve?clear_table=${clearTable}`, {
+      method: 'PUT',
+      headers: { ...getAuthHeader() }
+    });
+    if (!res.ok) throw new Error('Failed to resolve service request');
+    return res.json();
   }
 };
