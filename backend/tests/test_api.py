@@ -295,7 +295,27 @@ async def test_smart_qr_table_and_dine_in_flow():
         assert order_data["table_number"] == "T-01"
         assert order_data["packaging_fee"] == 0.0
 
-        # 5. Send Call Waiter / Request Bill service request
+        # 5. Admin accepts the Dine-In order
+        headers = {"Authorization": "Bearer basaveshwara_direct_master_admin_token"}
+        acc_res = await ac.put(f"/api/restaurant/orders/{order_data['order_id']}/status", json={
+            "status": "ACCEPTED",
+            "prep_time_minutes": 20,
+            "note": "Accepted at kitchen"
+        }, headers=headers)
+        assert acc_res.status_code == 200
+        assert acc_res.json()["order_status"] == "ACCEPTED"
+
+        # 6. Send Table Cleaning & Custom Suggestion linked to the accepted order
+        sug_res = await ac.post("/api/tables/T-01/service-request", json={
+            "request_type": "CUSTOM_SUGGESTION",
+            "customer_name": "QR Diner",
+            "order_id": order_data["order_id"],
+            "note": "Please clean table T-01 and bring water"
+        })
+        assert sug_res.status_code == 200
+        assert sug_res.json()["request"]["order_id"] == order_data["order_id"]
+
+        # 7. Send Call Waiter / Request Bill service request
         srv_res = await ac.post("/api/tables/T-01/service-request", json={
             "request_type": "REQUEST_BILL",
             "customer_name": "QR Diner",
@@ -304,8 +324,7 @@ async def test_smart_qr_table_and_dine_in_flow():
         assert srv_res.status_code == 200
         req_id = srv_res.json()["request"]["id"]
 
-        # 6. Admin views tables & resolves service request
-        headers = {"Authorization": "Bearer basaveshwara_direct_master_admin_token"}
+        # 8. Admin views tables & resolves service request
         admin_tables = await ac.get("/api/restaurant/tables", headers=headers)
         assert admin_tables.status_code == 200
         t01 = next(t for t in admin_tables.json() if t["table_number"] == "T-01")

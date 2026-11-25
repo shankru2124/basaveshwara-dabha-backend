@@ -4,7 +4,7 @@
       "name": "Basaveshwara Admin",
       "email": "admin@basaveshwara.com",
       "phone": "9876543210",
-      "password": "$2b$12$rUKXzv/PjxFlfAfpp.BQt.5ldnUbrzgbe/fykYJM9Lm9x.rU764oq",
+      "password": "$2b$12$/JI4O7Bl/4AshOKyJBsrNuGjPoxsB0bkw5piHi/IQAdL/3DAtXy26",
       "role": "admin",
       "created_at": "2026-11-14T17:49:06.344767",
       "addresses": [],
@@ -1016,5 +1016,118 @@
       "upi_payee_name": "BAsaweshwara Dabha",
       "upi_qr_image_url": "/uploads/09a42ae6c1bd410a8d1aa3a38fb033c8.jpeg"
     }
-  ]
+  ],
+  "tables": [
+    {
+      "table_number": "T-01",
+      "table_name": "Table 1 \u2022 Window View",
+      "capacity": 4,
+      "section": "Main Hall",
+      "status": "AVAILABLE",
+      "is_active": true,
+      "created_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T15:54:29.993985",
+      "_id": "6b0704b53e5e36b357df6d36"
+    },
+    {
+      "table_number": "T-02",
+      "table_name": "Table 2 \u2022 Center",
+      "capacity": 4,
+      "section": "Main Hall",
+      "status": "AVAILABLE",
+      "is_active": true,
+      "created_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T15:54:29.993985",
+      "_id": "6b0704b53e5e36b357df6d37"
+    },
+    {
+      "table_number": "T-03",
+      "table_name": "Table 3 \u2022 Corner",
+      "capacity": 2,
+      "section": "Main Hall",
+      "status": "AVAILABLE",
+      "is_active": true,
+      "created_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T15:54:29.993985",
+      "_id": "6b0704b53e5e36b357df6d38"
+    },
+    {
+      "table_number": "T-04",
+      "table_name": "Table 4 \u2022 Family",
+      "capacity": 6,
+      "section": "Main Hall",
+      "status": "AVAILABLE",
+      "is_active": true,
+      "created_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T15:54:29.993985",
+      "_id": "6b0704b53e5e36b357df6d39"
+    },
+    {
+      "table_number": "T-05",
+      "table_name": "Table 5 \u2022 Express",
+      "capacity": 2,
+      "section": "Main Hall",
+      "status": "AVAILABLE",
+      "is_active": true,
+      "created_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T15:54:29.993985",
+      "_id": "6b0704b63e5e36b357df6d3a"
+    },
+    {
+      "table_number": "T-06",
+      "table_name": "Table 6 \u2022 AC Dining",
+      "capacity": 4,
+      "section": "AC Family Hall",
+      "status": "AVAILABLE",
+      "is_active": true,
+      "created_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T15:54:29.993985",
+      "_id": "6b0704b63e5e36b357df6d3b"
+    },
+    {
+      "table_number": "T-07",
+      "table_name": "Table 7 \u2022 AC Dining",
+      "capacity": 4,
+      "section": "AC Family Hall",
+      "status": "AVAILABLE",
+      "is_active": true,
+      "created_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T15:54:29.993985",
+      "_id": "6b0704b63e5e36b357df6d3c"
+    },
+    {
+      "table_number": "T-08",
+      "table_name": "Table 8 \u2022 Grand Booth",
+      "capacity": 8,
+      "section": "AC Family Hall",
+      "status": "AVAILABLE",
+      "is_active": true,
+      "created_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T15:54:29.993985",
+      "_id": "6b0704b63e5e36b357df6d3d"
+    },
+    {
+      "table_number": "T-09",
+      "table_name": "Table 9 \u2022 Garden Breeze",
+      "capacity": 4,
+      "section": "Garden Patio",
+      "status": "AVAILABLE",
+      "is_active": true,
+      "created_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T15:54:29.993985",
+      "_id": "6b0704b63e5e36b357df6d3e"
+    },
+    {
+      "table_number": "T-10",
+      "table_name": "Table 10 \u2022 Garden Patio",
+      "capacity": 6,
+      "section": "Garden Patio",
+      "status": "AVAILABLE",
+      "is_active": true,
+      "created_at": "2026-11-25T15:54:29.993985",
+      "updated_at": "2026-11-25T15:54:29.993985",
+      "_id": "6b0704b63e5e36b357df6d3f"
+    }
+  ],
+  "service_requests": []
 }

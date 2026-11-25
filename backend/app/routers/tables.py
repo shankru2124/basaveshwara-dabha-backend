@@ -74,6 +74,7 @@ async def create_table_service_request(table_number: str, req: ServiceRequestCre
         "table_name": table_name,
         "request_type": req.request_type.value,
         "customer_name": req.customer_name or "Dine-In Guest",
+        "order_id": req.order_id,
         "note": req.note or "",
         "status": "PENDING",
         "created_at": now_iso,
@@ -97,9 +98,11 @@ async def create_table_service_request(table_number: str, req: ServiceRequestCre
 
     label_map = {
         "CALL_WAITER": "Waiter Requested",
+        "CLEAN_TABLE": "Table Cleaning Requested",
         "REQUEST_BILL": "Bill Requested",
         "WATER": "Drinking Water Requested",
-        "CUTLERY": "Cutlery / Plates Requested"
+        "CUTLERY": "Cutlery / Plates Requested",
+        "CUSTOM_SUGGESTION": "Customer Help / Suggestion"
     }
     readable = label_map.get(req.request_type.value, "Assistance Requested")
 

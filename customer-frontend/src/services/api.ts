@@ -306,7 +306,12 @@ export const api = {
 
   async sendTableServiceRequest(
     tableNumber: string,
-    payload: { request_type: 'CALL_WAITER' | 'REQUEST_BILL' | 'WATER' | 'CUTLERY'; customer_name?: string; note?: string }
+    payload: {
+      request_type: 'CALL_WAITER' | 'CLEAN_TABLE' | 'REQUEST_BILL' | 'WATER' | 'CUTLERY' | 'CUSTOM_SUGGESTION';
+      customer_name?: string;
+      order_id?: string;
+      note?: string;
+    }
   ) {
     const res = await fetch(`${BASE_URL}/tables/${encodeURIComponent(tableNumber)}/service-request`, {
       method: 'POST',

@@ -184,7 +184,7 @@ export interface AdminUser {
 }
 
 export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'BILLING' | 'RESERVED';
-export type ServiceRequestType = 'CALL_WAITER' | 'REQUEST_BILL' | 'WATER' | 'CUTLERY';
+export type ServiceRequestType = 'CALL_WAITER' | 'CLEAN_TABLE' | 'REQUEST_BILL' | 'WATER' | 'CUTLERY' | 'CUSTOM_SUGGESTION';
 
 export interface RestaurantTable {
   id: string;
@@ -207,6 +207,7 @@ export interface TableServiceRequest {
   table_name: string;
   request_type: ServiceRequestType;
   customer_name?: string;
+  order_id?: string;
   note?: string;
   status: 'PENDING' | 'RESOLVED';
   created_at: string;

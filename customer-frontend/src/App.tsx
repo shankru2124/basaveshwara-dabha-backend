@@ -3,7 +3,6 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
 import { AuthModal } from './components/AuthModal';
-import { InstallAppButton } from './components/InstallAppButton';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { SmartTableBanner } from './components/SmartTableBanner';
 import { HomePage } from './pages/HomePage';
@@ -25,7 +24,12 @@ export const App: React.FC = () => {
     }
     return 'home';
   });
-  const [activeTrackingOrderId, setActiveTrackingOrderId] = useState<string>('');
+  const [activeTrackingOrderId, setActiveTrackingOrderId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('bd_recent_order_id') || '';
+    }
+    return '';
+  });
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
@@ -83,9 +87,6 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* PWA Install Banner (Only shown in mobile/desktop browser, hidden inside installed app) */}
-      <InstallAppButton variant="banner" />
-
       {/* Main Navbar */}
       <Navbar
         settings={settings}
@@ -95,7 +96,10 @@ export const App: React.FC = () => {
       />
 
       {/* Smart QR Dine-In Table Bar */}
-      <SmartTableBanner />
+      <SmartTableBanner
+        recentOrderId={activeTrackingOrderId}
+        onTrackOrder={(orderId) => handleNavigate('track', { orderId })}
+      />
 
       {/* Main View Router */}
       <main className="flex-1 pb-24 md:pb-0">
@@ -125,6 +129,7 @@ export const App: React.FC = () => {
           <CheckoutPage
             onBack={() => handleNavigate('menu')}
             onOrderSuccess={(orderId) => {
+              localStorage.setItem('bd_recent_order_id', orderId);
               setActiveTrackingOrderId(orderId);
               handleNavigate('track', { orderId });
             }}

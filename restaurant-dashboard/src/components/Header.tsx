@@ -1,6 +1,5 @@
 import React from 'react';
-import { Wifi, WifiOff, RefreshCw, Menu, LayoutDashboard, BellRing, UtensilsCrossed, Settings, Layers, History, QrCode } from 'lucide-react';
-import { InstallAdminAppButton } from './InstallAdminAppButton';
+import { Wifi, RefreshCw, Menu, LayoutDashboard, BellRing, UtensilsCrossed, Settings, Layers, History, QrCode } from 'lucide-react';
 
 interface HeaderProps {
   title: string;
@@ -59,9 +58,6 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* PWA Install Button */}
-          <InstallAdminAppButton />
-
           {/* Real-time status badge */}
           <div className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold ${
             isWsConnected

@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { playTestSound, requestNotificationPermission } from '../utils/audio';
-import { InstallAdminAppButton } from './InstallAdminAppButton';
 
 interface SidebarProps {
   currentTab: string;
@@ -151,8 +150,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Footer controls & Profile */}
       <div className="p-4 border-t border-slate-800 space-y-3">
-        <InstallAdminAppButton variant="sidebar" />
-
         <div className="flex items-center justify-between text-xs text-slate-400 px-1">
           <button
             type="button"

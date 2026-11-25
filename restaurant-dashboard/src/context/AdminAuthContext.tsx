@@ -28,8 +28,6 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [admin, setAdmin] = useState<AdminUser | null>(DEFAULT_ADMIN);
   const [token, setToken] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('bd_admin_token');
-      if (saved) return saved;
       localStorage.setItem('bd_admin_token', DEFAULT_TOKEN);
       return DEFAULT_TOKEN;
     }

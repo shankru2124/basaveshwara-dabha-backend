@@ -168,6 +168,24 @@ export const App: React.FC = () => {
   const pendingServiceRequests = serviceRequests.filter((r) => r.status === 'PENDING');
   const pendingServiceCount = pendingServiceRequests.length;
 
+  const handleOrderUpdated = (orderId: string, updated: Partial<Order>) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.order_id === orderId ? { ...o, ...updated } : o))
+    );
+  };
+
+  const handleResolveServiceRequest = async (reqId: string) => {
+    try {
+      const updated = await api.resolveServiceRequest(reqId, false);
+      setServiceRequests((prev) =>
+        prev.map((r) => (r.id === reqId ? { ...r, ...updated, status: 'RESOLVED' } : r))
+      );
+      loadAllData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to mark service request attended');
+    }
+  };
+
   const handleToggleAcceptingOrders = async () => {
     if (!settings) return;
     try {
@@ -237,7 +255,10 @@ export const App: React.FC = () => {
           {currentTab === 'live_orders' && (
             <LiveOrdersPage
               orders={orders}
+              serviceRequests={serviceRequests}
               onRefresh={loadAllData}
+              onOrderUpdated={handleOrderUpdated}
+              onResolveServiceRequest={handleResolveServiceRequest}
               onViewReceipt={(o) => setViewingReceiptOrder(o)}
             />
           )}
@@ -332,28 +353,46 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Floating Table Waiter Call / Bill Request Alert */}
-      {pendingServiceCount > 0 && currentTab !== 'tables_qr' && (
-        <div className="fixed bottom-5 right-5 z-40 max-w-sm w-11/12 bg-slate-900 text-white rounded-3xl p-4 shadow-2xl border-2 border-amber-400 flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-900 font-black text-[10px] uppercase">
-                TABLE ALERT ({pendingServiceCount})
-              </span>
-              <span className="font-bold text-xs truncate">
-                {pendingServiceRequests[0].table_number} • {pendingServiceRequests[0].request_type.replace('_', ' ')}
-              </span>
+      {/* Floating Real-Time Customer Suggestion / Table Help Pop-up */}
+      {pendingServiceCount > 0 && (
+        <div className="fixed bottom-5 right-5 z-50 max-w-md w-11/12 bg-slate-900 text-white rounded-3xl p-4 shadow-2xl border-2 border-amber-400 space-y-2.5 animate-in slide-in-from-bottom-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full bg-red-600 text-white font-black text-[10px] uppercase animate-pulse">
+                  TABLE {pendingServiceRequests[0].table_number} HELP ({pendingServiceCount})
+                </span>
+                <span className="font-extrabold text-xs text-amber-300">
+                  {pendingServiceRequests[0].request_type.replace(/_/g, ' ')}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 mt-1 font-medium">
+                {pendingServiceRequests[0].table_name} • {pendingServiceRequests[0].customer_name || 'Guest'}
+              </p>
+              {pendingServiceRequests[0].note && (
+                <p className="text-xs font-bold text-white bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 mt-1.5">
+                  "{pendingServiceRequests[0].note}"
+                </p>
+              )}
             </div>
-            <p className="text-[11px] text-slate-300 truncate mt-0.5">
-              {pendingServiceRequests[0].table_name} needs attention
-            </p>
           </div>
-          <button
-            onClick={() => setCurrentTab('tables_qr')}
-            className="px-3 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-black text-xs rounded-xl shrink-0 transition"
-          >
-            View Tables
-          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleResolveServiceRequest(pendingServiceRequests[0].id)}
+              className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl transition"
+            >
+              ✓ Mark Attended
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentTab(currentTab === 'live_orders' ? 'tables_qr' : 'live_orders')}
+              className="px-3.5 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-black text-xs rounded-xl shrink-0 transition"
+            >
+              {currentTab === 'live_orders' ? 'Open Tables' : 'View Orders'}
+            </button>
+          </div>
         </div>
       )}
 

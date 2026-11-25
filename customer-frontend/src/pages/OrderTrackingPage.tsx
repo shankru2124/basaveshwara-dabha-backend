@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
   CheckCircle2, Clock, MapPin, Phone, AlertTriangle, XCircle,
-  ChefHat, Bike, Store, ArrowLeft, RefreshCw, Sparkles, Check, QrCode
+  ChefHat, Bike, Store, ArrowLeft, RefreshCw, Sparkles, Check, QrCode,
+  BellRing, Droplets, Receipt, MessageSquare, Send
 } from 'lucide-react';
 import { Order, OrderStatus } from '../types';
 import { api } from '../services/api';
@@ -27,6 +28,34 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isCancelling, setIsCancelling] = useState(false);
+  const [suggestionText, setSuggestionText] = useState('');
+  const [isSendingHelp, setIsSendingHelp] = useState(false);
+  const [helpFeedback, setHelpFeedback] = useState('');
+
+  const handleTableHelpRequest = async (
+    requestType: 'CALL_WAITER' | 'CLEAN_TABLE' | 'REQUEST_BILL' | 'WATER' | 'CUSTOM_SUGGESTION',
+    note: string
+  ) => {
+    if (!order) return;
+    const tNum = order.table_number || 'COUNTER';
+    setIsSendingHelp(true);
+    setHelpFeedback('');
+    try {
+      const res = await api.sendTableServiceRequest(tNum, {
+        request_type: requestType,
+        customer_name: order.customer_name,
+        order_id: order.order_id,
+        note
+      });
+      setHelpFeedback(res.message || 'Sent to staff!');
+      if (requestType === 'CUSTOM_SUGGESTION') setSuggestionText('');
+      setTimeout(() => setHelpFeedback(''), 5000);
+    } catch (err: any) {
+      alert(err.message || 'Failed to send request to staff.');
+    } finally {
+      setIsSendingHelp(false);
+    }
+  };
 
   const fetchOrder = async () => {
     try {
@@ -363,6 +392,99 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
           </div>
         )}
       </div>
+
+      {/* Customer Help & Suggestion Box (Links directly to Accepted Order on Kitchen Screen) */}
+      {!isCancelled && !isRejected && (
+        <div className="bg-white rounded-3xl border border-amber-200 p-6 sm:p-8 shadow-sm space-y-4">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <h3 className="font-extrabold text-base text-gray-900 flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-brand-600" />
+                Need Help or Table Request?
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Send table cleaning, waiter call, water, or any custom suggestion — pops up right on our staff order screen{order.table_number ? ` with Table ${order.table_number}` : ''}.
+              </p>
+            </div>
+            {order.table_number && (
+              <span className="px-3 py-1 rounded-full bg-slate-900 text-amber-300 font-black text-xs">
+                TABLE {order.table_number}
+              </span>
+            )}
+          </div>
+
+          {helpFeedback && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-bold text-emerald-800 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{helpFeedback}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-bold">
+            <button
+              type="button"
+              disabled={isSendingHelp}
+              onClick={() => handleTableHelpRequest('CLEAN_TABLE', 'Please clean our table')}
+              className="py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 text-red-900 flex items-center justify-center gap-1.5 transition"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-red-600" />
+              Clean Table
+            </button>
+            <button
+              type="button"
+              disabled={isSendingHelp}
+              onClick={() => handleTableHelpRequest('CALL_WAITER', 'Guest requested waiter at table')}
+              className="py-2.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-950 flex items-center justify-center gap-1.5 transition"
+            >
+              <BellRing className="w-3.5 h-3.5 text-amber-600" />
+              Call Waiter
+            </button>
+            <button
+              type="button"
+              disabled={isSendingHelp}
+              onClick={() => handleTableHelpRequest('WATER', 'Please bring drinking water')}
+              className="py-2.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-950 flex items-center justify-center gap-1.5 transition"
+            >
+              <Droplets className="w-3.5 h-3.5 text-blue-600" />
+              Water
+            </button>
+            <button
+              type="button"
+              disabled={isSendingHelp}
+              onClick={() => handleTableHelpRequest('REQUEST_BILL', 'Guest requested final bill')}
+              className="py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-950 flex items-center justify-center gap-1.5 transition"
+            >
+              <Receipt className="w-3.5 h-3.5 text-emerald-600" />
+              Request Bill
+            </button>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!suggestionText.trim()) return;
+              handleTableHelpRequest('CUSTOM_SUGGESTION', suggestionText.trim());
+            }}
+            className="space-y-2.5 pt-1"
+          >
+            <textarea
+              rows={2}
+              placeholder="Write your suggestion or help request (e.g., Please clean table, need extra plates, reduce spice...)"
+              value={suggestionText}
+              onChange={(e) => setSuggestionText(e.target.value)}
+              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-2xl text-xs text-gray-900 focus:outline-none focus:border-brand-500 focus:bg-white"
+            />
+            <button
+              type="submit"
+              disabled={!suggestionText.trim() || isSendingHelp}
+              className="w-full sm:w-auto px-5 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{isSendingHelp ? 'Sending...' : 'Send Suggestion / Help Request'}</span>
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

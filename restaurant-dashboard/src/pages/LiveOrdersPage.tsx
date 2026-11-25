@@ -1,21 +1,27 @@
 import React, { useState } from 'react';
 import {
-  Bell, Check, X, Clock, ChefHat, Bike, Store, Printer,
+  Bell, BellRing, Check, X, Clock, ChefHat, Bike, Store, Printer,
   AlertCircle, Phone, MapPin, ChevronRight, CheckCircle2, User
 } from 'lucide-react';
-import { Order, OrderStatus } from '../types';
+import { Order, OrderStatus, TableServiceRequest } from '../types';
 import { api } from '../services/api';
 import { stopOrderAlarm } from '../utils/audio';
 
 interface LiveOrdersPageProps {
   orders: Order[];
+  serviceRequests?: TableServiceRequest[];
   onRefresh: () => void;
+  onOrderUpdated?: (orderId: string, updated: Partial<Order>) => void;
+  onResolveServiceRequest?: (reqId: string) => void;
   onViewReceipt: (order: Order) => void;
 }
 
 export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
   orders,
+  serviceRequests = [],
   onRefresh,
+  onOrderUpdated,
+  onResolveServiceRequest,
   onViewReceipt
 }) => {
   const [filterTab, setFilterTab] = useState<'ALL' | 'PLACED' | 'PREPARING' | 'READY' | 'COMPLETED'>('ALL');
@@ -45,10 +51,16 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
     stopOrderAlarm();
     setIsUpdating(true);
     try {
-      await api.updateOrderStatus(acceptingOrder.order_id, {
+      const targetId = acceptingOrder.order_id;
+      const updated = await api.updateOrderStatus(targetId, {
         status: 'ACCEPTED',
         prep_time_minutes: selectedPrepTime,
         note: `Order accepted by kitchen. Estimated preparation: ${selectedPrepTime} minutes.`
+      });
+      onOrderUpdated?.(targetId, {
+        ...(updated || {}),
+        order_status: 'ACCEPTED',
+        estimated_prep_time_minutes: selectedPrepTime
       });
       setAcceptingOrder(null);
       onRefresh();
@@ -64,10 +76,16 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
     stopOrderAlarm();
     setIsUpdating(true);
     try {
-      await api.updateOrderStatus(rejectingOrder.order_id, {
+      const targetId = rejectingOrder.order_id;
+      const updated = await api.updateOrderStatus(targetId, {
         status: 'REJECTED',
         rejection_reason: rejectionReason,
         note: `Declined by restaurant: ${rejectionReason}`
+      });
+      onOrderUpdated?.(targetId, {
+        ...(updated || {}),
+        order_status: 'REJECTED',
+        rejection_reason: rejectionReason
       });
       setRejectingOrder(null);
       onRefresh();
@@ -81,9 +99,13 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
   const handleAdvanceStatus = async (order: Order, nextStatus: OrderStatus) => {
     setIsUpdating(true);
     try {
-      await api.updateOrderStatus(order.order_id, {
+      const updated = await api.updateOrderStatus(order.order_id, {
         status: nextStatus,
         note: `Order advanced to ${nextStatus}`
+      });
+      onOrderUpdated?.(order.order_id, {
+        ...(updated || {}),
+        order_status: nextStatus
       });
       onRefresh();
     } catch (err: any) {
@@ -165,12 +187,22 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {activeOrders.map((o) => {
             const isNew = o.order_status === 'PLACED';
+            const orderHelpRequests = serviceRequests.filter(
+              (r) =>
+                r.status === 'PENDING' &&
+                ((o.table_number && r.table_number === o.table_number) ||
+                  (r.order_id && r.order_id === o.order_id))
+            );
 
             return (
               <div
                 key={o.order_id}
                 className={`bg-white rounded-3xl border shadow-sm flex flex-col justify-between overflow-hidden transition ${
-                  isNew ? 'border-red-400 ring-4 ring-red-100 order-alert-ring' : 'border-slate-200/80 hover:shadow-md'
+                  orderHelpRequests.length > 0
+                    ? 'border-amber-500 ring-4 ring-amber-200 shadow-lg'
+                    : isNew
+                    ? 'border-red-400 ring-4 ring-red-100 order-alert-ring'
+                    : 'border-slate-200/80 hover:shadow-md'
                 }`}
               >
                 <div>
@@ -179,8 +211,13 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
                     isNew ? 'bg-red-50/80 border-red-200 text-red-900' : 'bg-slate-50 border-slate-100 text-slate-900'
                   }`}>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-black text-base">{o.order_id}</span>
+                        {o.table_number && (
+                          <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-black uppercase bg-slate-900 text-amber-300 shadow-xs">
+                            TABLE {o.table_number}
+                          </span>
+                        )}
                         {isNew && (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white animate-pulse">
                             NEW
@@ -189,6 +226,7 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
                       </div>
                       <p className="text-[11px] text-slate-500">
                         {new Date(o.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {o.table_name ? ` • ${o.table_name}` : ''}
                       </p>
                     </div>
 
@@ -205,6 +243,7 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
                           : o.fulfillment_type}
                       </span>
                       <button
+                        type="button"
                         onClick={() => onViewReceipt(o)}
                         className="p-1 text-slate-500 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition"
                         title="Print Ticket"
@@ -213,6 +252,39 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
                       </button>
                     </div>
                   </div>
+
+                  {/* Pop-up Customer Help / Suggestion Alert right inside the Order Card */}
+                  {orderHelpRequests.length > 0 && (
+                    <div className="p-3.5 bg-gradient-to-r from-amber-100 via-orange-100 to-red-100 border-b-2 border-amber-400 space-y-2 animate-in fade-in">
+                      {orderHelpRequests.map((req) => (
+                        <div key={req.id} className="bg-white/95 rounded-2xl p-3 border border-amber-300 shadow-sm flex items-start justify-between gap-2.5">
+                          <div className="min-w-0 space-y-0.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <BellRing className="w-3.5 h-3.5 text-red-600 animate-bounce shrink-0" />
+                              <span className="px-2 py-0.5 rounded-md bg-red-600 text-white font-black text-[10px] uppercase">
+                                {req.table_number} HELP REQUEST
+                              </span>
+                              <span className="font-extrabold text-[11px] text-slate-900">
+                                {req.request_type.replace(/_/g, ' ')}
+                              </span>
+                            </div>
+                            {req.note && (
+                              <p className="text-xs font-bold text-slate-800 bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-200 mt-1">
+                                "{req.note}"
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => onResolveServiceRequest?.(req.id)}
+                            className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] rounded-xl shrink-0 transition"
+                          >
+                            ✓ Attended
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Customer Info */}
                   <div className="p-4 border-b border-slate-100 bg-white space-y-1 text-xs">
@@ -269,6 +341,7 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
                   {isNew ? (
                     <div className="grid grid-cols-2 gap-2">
                       <button
+                        type="button"
                         onClick={() => {
                           stopOrderAlarm();
                           setAcceptingOrder(o);
@@ -279,6 +352,7 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
                         Accept Order
                       </button>
                       <button
+                        type="button"
                         onClick={() => {
                           stopOrderAlarm();
                           setRejectingOrder(o);
@@ -291,6 +365,7 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
                     </div>
                   ) : o.order_status === 'ACCEPTED' ? (
                     <button
+                      type="button"
                       onClick={() => handleAdvanceStatus(o, 'PREPARING' as OrderStatus)}
                       disabled={isUpdating}
                       className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2"
@@ -300,16 +375,18 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
                     </button>
                   ) : o.order_status === 'PREPARING' ? (
                     <button
+                      type="button"
                       onClick={() => handleAdvanceStatus(o, 'READY' as OrderStatus)}
                       disabled={isUpdating}
                       className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      Mark Food Ready for Pickup / Delivery
+                      Mark Food Ready
                     </button>
                   ) : o.order_status === 'READY' ? (
                     o.fulfillment_type === 'DELIVERY' ? (
                       <button
+                        type="button"
                         onClick={() => handleAdvanceStatus(o, 'OUT_FOR_DELIVERY' as OrderStatus)}
                         disabled={isUpdating}
                         className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2"
@@ -319,6 +396,7 @@ export const LiveOrdersPage: React.FC<LiveOrdersPageProps> = ({
                       </button>
                     ) : (
                       <button
+                        type="button"
                         onClick={() => handleAdvanceStatus(o, 'DELIVERED' as OrderStatus)}
                         disabled={isUpdating}
                         className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2"

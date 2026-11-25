@@ -1,22 +1,32 @@
 import React, { useState } from 'react';
 import {
-  QrCode, BellRing, Receipt, Droplets, Utensils, X, CheckCircle2, ChevronDown
+  QrCode, BellRing, Receipt, Droplets, Utensils, X, CheckCircle2, ChevronDown,
+  Sparkles, MessageSquare, Send, MapPin
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
-export const SmartTableBanner: React.FC = () => {
+interface SmartTableBannerProps {
+  recentOrderId?: string;
+  onTrackOrder?: (orderId: string) => void;
+}
+
+export const SmartTableBanner: React.FC<SmartTableBannerProps> = ({
+  recentOrderId,
+  onTrackOrder
+}) => {
   const { activeTable, publicTables, selectTable, clearTable } = useCart();
   const { user } = useAuth();
 
   const [isTablePickerOpen, setIsTablePickerOpen] = useState(false);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  const [customSuggestion, setCustomSuggestion] = useState('');
   const [sendingType, setSendingType] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string>('');
 
   const triggerService = async (
-    requestType: 'CALL_WAITER' | 'REQUEST_BILL' | 'WATER' | 'CUTLERY',
+    requestType: 'CALL_WAITER' | 'CLEAN_TABLE' | 'REQUEST_BILL' | 'WATER' | 'CUTLERY' | 'CUSTOM_SUGGESTION',
     note?: string
   ) => {
     if (!activeTable) return;
@@ -25,9 +35,13 @@ export const SmartTableBanner: React.FC = () => {
       const res = await api.sendTableServiceRequest(activeTable.table_number, {
         request_type: requestType,
         customer_name: user?.name || `Table ${activeTable.table_number} Guest`,
+        order_id: recentOrderId || undefined,
         note
       });
       setToastMsg(res.message || 'Staff notified!');
+      if (requestType === 'CUSTOM_SUGGESTION') {
+        setCustomSuggestion('');
+      }
       setIsServiceModalOpen(false);
       setTimeout(() => setToastMsg(''), 4000);
     } catch (err: any) {
@@ -35,6 +49,12 @@ export const SmartTableBanner: React.FC = () => {
     } finally {
       setSendingType(null);
     }
+  };
+
+  const handleSendSuggestion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customSuggestion.trim()) return;
+    await triggerService('CUSTOM_SUGGESTION', customSuggestion.trim());
   };
 
   return (
@@ -64,13 +84,24 @@ export const SmartTableBanner: React.FC = () => {
 
             {/* Instant Table Actions */}
             <div className="flex items-center gap-2 flex-wrap">
+              {recentOrderId && onTrackOrder && (
+                <button
+                  type="button"
+                  onClick={() => onTrackOrder(recentOrderId)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95"
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>Track Order</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => setIsServiceModalOpen(true)}
                 className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95"
               >
                 <BellRing className="w-3.5 h-3.5" />
-                <span>Call Waiter</span>
+                <span>Help / Waiter / Suggestion</span>
               </button>
 
               <button
@@ -110,13 +141,24 @@ export const SmartTableBanner: React.FC = () => {
               <QrCode className="w-3.5 h-3.5 text-brand-600 shrink-0" />
               <span className="truncate">Seated inside <strong>Basaveshwara Dabha</strong>? Switch to Smart QR Table Dine-In!</span>
             </span>
-            <button
-              type="button"
-              onClick={() => setIsTablePickerOpen(true)}
-              className="px-3 py-1 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-[11px] rounded-lg shrink-0 transition"
-            >
-              Select Table QR
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {recentOrderId && onTrackOrder && (
+                <button
+                  type="button"
+                  onClick={() => onTrackOrder(recentOrderId)}
+                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg transition"
+                >
+                  Track Order
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsTablePickerOpen(true)}
+                className="px-3 py-1 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-[11px] rounded-lg transition"
+              >
+                Select Table QR
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -129,28 +171,42 @@ export const SmartTableBanner: React.FC = () => {
         </div>
       )}
 
-      {/* Call Waiter / Quick Service Options Modal */}
+      {/* Call Waiter / Table Cleaning / Suggestion Box Modal */}
       {isServiceModalOpen && activeTable && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-black text-base text-slate-900">Table {activeTable.table_number} Service</h3>
-                <p className="text-xs text-slate-500">Tap an option to alert Basaveshwara Dabha staff</p>
+                <h3 className="font-black text-base text-slate-900">
+                  Table {activeTable.table_number} • Staff Help & Suggestions
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Tap a quick option or type your request — appears immediately on our staff screen!
+                </p>
               </div>
               <button onClick={() => setIsServiceModalOpen(false)} className="p-1.5 hover:bg-slate-100 rounded-xl">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs font-bold">
+            <div className="grid grid-cols-2 gap-2.5 text-xs font-bold">
+              <button
+                type="button"
+                disabled={Boolean(sendingType)}
+                onClick={() => triggerService('CLEAN_TABLE', 'Please clean our table')}
+                className="p-3.5 rounded-2xl bg-red-50 hover:bg-red-100 border border-red-200 text-red-950 flex flex-col items-center gap-1.5 transition"
+              >
+                <Sparkles className="w-5 h-5 text-red-600" />
+                <span>Clean Table</span>
+              </button>
+
               <button
                 type="button"
                 disabled={Boolean(sendingType)}
                 onClick={() => triggerService('CALL_WAITER', 'Guest requested waiter assistance')}
-                className="p-4 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-950 flex flex-col items-center gap-2 transition"
+                className="p-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-950 flex flex-col items-center gap-1.5 transition"
               >
-                <BellRing className="w-6 h-6 text-amber-600" />
+                <BellRing className="w-5 h-5 text-amber-600" />
                 <span>Call Waiter</span>
               </button>
 
@@ -158,9 +214,9 @@ export const SmartTableBanner: React.FC = () => {
                 type="button"
                 disabled={Boolean(sendingType)}
                 onClick={() => triggerService('WATER', 'Please bring drinking water')}
-                className="p-4 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-950 flex flex-col items-center gap-2 transition"
+                className="p-3.5 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-950 flex flex-col items-center gap-1.5 transition"
               >
-                <Droplets className="w-6 h-6 text-blue-600" />
+                <Droplets className="w-5 h-5 text-blue-600" />
                 <span>Drinking Water</span>
               </button>
 
@@ -168,22 +224,35 @@ export const SmartTableBanner: React.FC = () => {
                 type="button"
                 disabled={Boolean(sendingType)}
                 onClick={() => triggerService('CUTLERY', 'Need extra spoons / plates / tissues')}
-                className="p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 flex flex-col items-center gap-2 transition"
+                className="p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 flex flex-col items-center gap-1.5 transition"
               >
-                <Utensils className="w-6 h-6 text-slate-700" />
+                <Utensils className="w-5 h-5 text-slate-700" />
                 <span>Plates & Cutlery</span>
               </button>
-
-              <button
-                type="button"
-                disabled={Boolean(sendingType)}
-                onClick={() => triggerService('REQUEST_BILL', 'Ready to settle bill')}
-                className="p-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-950 flex flex-col items-center gap-2 transition"
-              >
-                <Receipt className="w-6 h-6 text-emerald-600" />
-                <span>Request Bill</span>
-              </button>
             </div>
+
+            {/* Customer Suggestion / Custom Help Box */}
+            <form onSubmit={handleSendSuggestion} className="pt-2 border-t border-slate-100 space-y-2.5">
+              <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5 text-brand-600" />
+                Customer Suggestion / Custom Help Box
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Write any request or suggestion (e.g., Please clean table before dessert, bring extra sambar, pack parcel...)"
+                value={customSuggestion}
+                onChange={(e) => setCustomSuggestion(e.target.value)}
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 focus:outline-none focus:border-brand-500 focus:bg-white"
+              />
+              <button
+                type="submit"
+                disabled={!customSuggestion.trim() || Boolean(sendingType)}
+                className="w-full py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>{sendingType === 'CUSTOM_SUGGESTION' ? 'Sending...' : `Send Request for Table ${activeTable.table_number}`}</span>
+              </button>
+            </form>
           </div>
         </div>
       )}

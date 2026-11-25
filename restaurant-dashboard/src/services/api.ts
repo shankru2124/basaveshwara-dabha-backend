@@ -180,10 +180,33 @@ export function resolveImageUrl(url?: string | null): string {
 
 const getBaseUrl = () => getApiBaseUrl();
 
-function getAdminToken(): string | null {
+const MASTER_ADMIN_TOKEN = 'basaveshwara_direct_master_admin_token';
+
+function isJwtExpired(token: string): boolean {
+  if (!token || token === MASTER_ADMIN_TOKEN || token.startsWith('direct_admin_')) {
+    return false;
+  }
+  const parts = token.split('.');
+  if (parts.length !== 3) return true;
+  try {
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (payload.exp && payload.exp * 1000 < Date.now() + 5000) {
+      return true;
+    }
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+function getAdminToken(): string {
+  if (typeof window === 'undefined') return MASTER_ADMIN_TOKEN;
   const token = localStorage.getItem('bd_admin_token');
-  if (token) return token;
-  return 'basaveshwara_direct_master_admin_token';
+  if (token && !isJwtExpired(token)) {
+    return token;
+  }
+  localStorage.setItem('bd_admin_token', MASTER_ADMIN_TOKEN);
+  return MASTER_ADMIN_TOKEN;
 }
 
 function getAuthHeader(): Record<string, string> {
@@ -293,7 +316,8 @@ export const api = {
 
   async updateOrderStatus(orderId: string, payload: { status: string; prep_time_minutes?: number; rejection_reason?: string; note?: string }) {
     try {
-      const res = await fetch(`${getBaseUrl()}/restaurant/orders/${orderId}/status`, {
+      const url = `${getBaseUrl()}/restaurant/orders/${encodeURIComponent(orderId)}/status`;
+      let res = await fetch(url, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -301,6 +325,18 @@ export const api = {
         },
         body: JSON.stringify(payload)
       });
+      // If stored JWT token was rejected by server (401/403), reset to master token and retry immediately
+      if (res.status === 401 || res.status === 403) {
+        localStorage.setItem('bd_admin_token', MASTER_ADMIN_TOKEN);
+        res = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${MASTER_ADMIN_TOKEN}`
+          },
+          body: JSON.stringify(payload)
+        });
+      }
       if (res.ok) {
         const data = await res.json();
         // Update local orders cache

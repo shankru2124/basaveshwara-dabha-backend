@@ -12,9 +12,11 @@ class TableStatus(str, Enum):
 
 class ServiceRequestType(str, Enum):
     CALL_WAITER = "CALL_WAITER"
+    CLEAN_TABLE = "CLEAN_TABLE"
     REQUEST_BILL = "REQUEST_BILL"
     WATER = "WATER"
     CUTLERY = "CUTLERY"
+    CUSTOM_SUGGESTION = "CUSTOM_SUGGESTION"
 
 
 class TableCreate(BaseModel):
@@ -38,4 +40,5 @@ class TableUpdate(BaseModel):
 class ServiceRequestCreate(BaseModel):
     request_type: ServiceRequestType = ServiceRequestType.CALL_WAITER
     customer_name: Optional[str] = None
+    order_id: Optional[str] = None
     note: Optional[str] = None

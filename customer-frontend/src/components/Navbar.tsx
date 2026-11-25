@@ -3,7 +3,6 @@ import { ShoppingBag, User as UserIcon, Search, Clock, Phone, ChevronDown, LogOu
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { RestaurantSettings } from '../types';
-import { InstallAppButton } from './InstallAppButton';
 import { resolveImageUrl } from '../services/api';
 
 interface NavbarProps {
@@ -150,9 +149,6 @@ export const Navbar: React.FC<NavbarProps> = ({ settings, onOpenAuth, onNavigate
 
         {/* Right side controls */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-          {/* PWA Install Button (Only visible on browser; auto-hidden when inside installed app) */}
-          <InstallAppButton />
-
           {/* Quick Search CTA */}
           <button
             onClick={() => onNavigate('menu')}
