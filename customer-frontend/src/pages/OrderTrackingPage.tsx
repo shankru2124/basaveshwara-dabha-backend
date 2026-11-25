@@ -11,6 +11,7 @@ import { playOrderChime } from '../utils/audio';
 
 interface OrderTrackingPageProps {
   orderId: string;
+  onOrderCompleted?: () => void;
   onBack: () => void;
 }
 
@@ -24,7 +25,7 @@ const STATUS_STEPS = [
   { key: 'DELIVERED', label: 'Bill Paid • Completed', desc: 'Thank you for dining with Basaveshwara Dabha!' }
 ];
 
-export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, onBack }) => {
+export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, onOrderCompleted, onBack }) => {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -59,9 +60,17 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
   };
 
   const fetchOrder = async () => {
+    if (!orderId) {
+      setOrder(null);
+      setIsLoading(false);
+      return;
+    }
     try {
       const data = await api.trackOrder(orderId);
       setOrder(data);
+      if (data?.order_status === 'DELIVERED') {
+        onOrderCompleted?.();
+      }
     } catch (err: any) {
       setError(err.message || 'Could not load order details.');
     } finally {
@@ -70,6 +79,8 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
   };
 
   useEffect(() => {
+    setIsLoading(true);
+    setError('');
     fetchOrder();
   }, [orderId]);
 
@@ -82,6 +93,9 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
       ) {
         if (data.order) {
           setOrder(data.order);
+          if (data.order.order_status === 'DELIVERED') {
+            onOrderCompleted?.();
+          }
         } else {
           fetchOrder();
         }
@@ -113,17 +127,26 @@ export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId, o
     );
   }
 
-  if (error || !order) {
+  // Once an order is completed (DELIVERED / Bill Paid) or none exists, show clean empty state ready for new diner
+  if (!orderId || error || !order || order.order_status === 'DELIVERED') {
     return (
-      <div className="max-w-2xl mx-auto py-20 px-4 text-center space-y-4">
-        <XCircle className="w-12 h-12 text-red-500 mx-auto" />
-        <h2 className="text-xl font-bold text-gray-900">Order Not Found</h2>
-        <p className="text-xs text-gray-500">{error || 'Please verify your Order ID.'}</p>
+      <div className="max-w-xl mx-auto py-20 px-4 text-center space-y-4">
+        <div className="w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-200 mx-auto flex items-center justify-center text-emerald-600">
+          <CheckCircle2 className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-black text-gray-900">
+          {order?.order_status === 'DELIVERED' ? 'No Active Order' : error ? 'No Active Order Found' : 'No Active Order'}
+        </h2>
+        <p className="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed">
+          {order?.order_status === 'DELIVERED'
+            ? 'Previous order has been completed and cleared. Ready to place a fresh order from Basaveshwara Dabha!'
+            : 'There is currently no active order in progress. Browse our pure vegetarian menu to place a fresh order.'}
+        </p>
         <button
           onClick={onBack}
-          className="px-6 py-2.5 bg-brand-600 text-white font-bold text-xs rounded-xl"
+          className="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-2xl shadow-md transition"
         >
-          Back to Home
+          Explore Menu & Order Food
         </button>
       </div>
     );

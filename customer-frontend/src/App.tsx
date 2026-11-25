@@ -17,16 +17,20 @@ import { customerWs } from './services/websocket';
 import { useCart } from './context/CartContext';
 
 export const App: React.FC = () => {
-  const { totalItemCount, setIsCartOpen } = useCart();
+  const { totalItemCount, setIsCartOpen, activeTable, refreshActiveTable } = useCart();
   const [currentPage, setCurrentPage] = useState<string>(() => {
     if (typeof window !== 'undefined' && (window.location.search.includes('table=') || window.location.search.includes('qr='))) {
       return 'menu';
     }
     return 'home';
   });
-  const [activeTrackingOrderId, setActiveTrackingOrderId] = useState<string>(() => {
+  const [activeTrackingOrderId, setActiveTrackingOrderId] = useState<string>('');
+  const [nonTableOrderId, setNonTableOrderId] = useState<string>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('bd_recent_order_id') || '';
+      // Only load guest non-table tracking ID if NOT opening a QR table URL
+      if (!window.location.search.includes('table=') && !window.location.search.includes('qr=')) {
+        return sessionStorage.getItem('bd_non_table_order_id') || '';
+      }
     }
     return '';
   });
@@ -55,6 +59,8 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
+    // Purge legacy global recent order ID so tables never cross-show orders
+    localStorage.removeItem('bd_recent_order_id');
     loadInitialData();
     customerWs.connect();
 
@@ -63,11 +69,25 @@ export const App: React.FC = () => {
         setSettings(data.settings);
       } else if (data.event === 'menu_updated' || data.event === 'food_availability_changed') {
         loadInitialData();
+      } else if (data.event === 'order_status_updated' || data.event === 'payment_confirmed') {
+        const st = data.order?.order_status || data.status;
+        if (st === 'DELIVERED' || st === 'CANCELLED' || st === 'REJECTED') {
+          const doneId = data.order_id || data.order?.order_id;
+          if (doneId && sessionStorage.getItem('bd_non_table_order_id') === doneId) {
+            sessionStorage.removeItem('bd_non_table_order_id');
+            setNonTableOrderId('');
+          }
+          refreshActiveTable();
+        }
       }
     });
 
     return () => unsub();
-  }, []);
+  }, [activeTable?.table_number]);
+
+  const bannerOrderId = activeTable
+    ? (activeTable.active_orders?.[0]?.order_id || '')
+    : nonTableOrderId;
 
   const handleNavigate = (page: string, params?: any) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -97,7 +117,7 @@ export const App: React.FC = () => {
 
       {/* Smart QR Dine-In Table Bar */}
       <SmartTableBanner
-        recentOrderId={activeTrackingOrderId}
+        recentOrderId={bannerOrderId}
         onTrackOrder={(orderId) => handleNavigate('track', { orderId })}
       />
 
@@ -129,7 +149,12 @@ export const App: React.FC = () => {
           <CheckoutPage
             onBack={() => handleNavigate('menu')}
             onOrderSuccess={(orderId) => {
-              localStorage.setItem('bd_recent_order_id', orderId);
+              if (activeTable) {
+                refreshActiveTable();
+              } else {
+                sessionStorage.setItem('bd_non_table_order_id', orderId);
+                setNonTableOrderId(orderId);
+              }
               setActiveTrackingOrderId(orderId);
               handleNavigate('track', { orderId });
             }}
@@ -139,7 +164,16 @@ export const App: React.FC = () => {
         {currentPage === 'track' && (
           <OrderTrackingPage
             orderId={activeTrackingOrderId}
-            onBack={() => handleNavigate('home')}
+            onOrderCompleted={() => {
+              if (activeTable) {
+                refreshActiveTable();
+              } else {
+                sessionStorage.removeItem('bd_non_table_order_id');
+                setNonTableOrderId('');
+              }
+              setActiveTrackingOrderId('');
+            }}
+            onBack={() => handleNavigate(activeTable ? 'menu' : 'home')}
           />
         )}
 

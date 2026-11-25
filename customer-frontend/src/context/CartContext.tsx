@@ -24,6 +24,7 @@ interface CartContextType {
   isQrLocked: boolean;
   publicTables: RestaurantTable[];
   selectTable: (tableNumber: string, lockedFromQr?: boolean) => Promise<void>;
+  refreshActiveTable: () => Promise<void>;
   clearTable: () => void;
 }
 
@@ -51,9 +52,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const selectTable = async (tableNumber: string, lockedFromQr: boolean = false) => {
     const clean = tableNumber.trim().toUpperCase();
     if (!clean) return;
-    localStorage.setItem('bd_active_table_number', clean);
+    sessionStorage.setItem('bd_active_table_number', clean);
     if (lockedFromQr) {
-      localStorage.setItem('bd_qr_locked', 'true');
+      sessionStorage.setItem('bd_qr_locked', 'true');
       setIsQrLocked(true);
     }
     setFulfillmentType('DINE_IN');
@@ -69,12 +70,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         capacity: 4,
         section: 'Main Hall',
         status: 'OCCUPIED',
-        is_active: true
+        is_active: true,
+        active_orders: []
       });
     }
   };
 
+  const refreshActiveTable = async () => {
+    const tNum = activeTable?.table_number || sessionStorage.getItem('bd_active_table_number');
+    if (!tNum) return;
+    try {
+      const tbl = await api.getTableByNumber(tNum);
+      setActiveTable(tbl);
+    } catch {
+      // ignore temporary network hiccup
+    }
+  };
+
   const clearTable = () => {
+    sessionStorage.removeItem('bd_active_table_number');
+    sessionStorage.removeItem('bd_qr_locked');
     localStorage.removeItem('bd_active_table_number');
     localStorage.removeItem('bd_qr_locked');
     setIsQrLocked(false);
@@ -88,15 +103,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Detect Smart QR URL (?table=T-01 or ?qr=T-01) and load public table list on mount
+  // Detect Smart QR URL (?table=T-01 or ?qr=T-01) per tab via sessionStorage and load public table list on mount
   useEffect(() => {
     api.getPublicTables().then(setPublicTables).catch(() => {});
 
     if (typeof window !== 'undefined') {
+      // Clean up legacy cross-tab table lock keys so different table QR tabs never mix orders
+      localStorage.removeItem('bd_active_table_number');
+      localStorage.removeItem('bd_qr_locked');
+
       const params = new URLSearchParams(window.location.search);
       const qrTable = params.get('table') || params.get('qr');
-      const savedTable = localStorage.getItem('bd_active_table_number');
-      const savedLocked = localStorage.getItem('bd_qr_locked') === 'true';
+      const savedTable = sessionStorage.getItem('bd_active_table_number');
+      const savedLocked = sessionStorage.getItem('bd_qr_locked') === 'true';
       if (qrTable) {
         selectTable(qrTable, true);
       } else if (savedTable) {
@@ -218,6 +237,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isQrLocked,
         publicTables,
         selectTable,
+        refreshActiveTable,
         clearTable
       }}
     >
