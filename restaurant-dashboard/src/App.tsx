@@ -11,7 +11,6 @@ import { CustomersPage } from './pages/CustomersPage';
 import { CouponsPage } from './pages/CouponsPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { SecurityPage } from './pages/SecurityPage';
 import { TablesQrPage } from './pages/TablesQrPage';
 
 import { useAdminAuth } from './context/AdminAuthContext';
@@ -208,7 +207,6 @@ export const App: React.FC = () => {
     coupons: { title: 'Coupons & Promos', subtitle: 'Discount campaigns and promotional offers' },
     analytics: { title: 'Reports & Analytics', subtitle: 'Revenue breakdowns, popular dishes, and financial metrics' },
     settings: { title: 'Display & Restaurant Settings', subtitle: 'Customer header editor, announcement banners, operating hours, delivery fees, and online ordering controls' },
-    security: { title: 'Admin Security & Credentials', subtitle: 'Manage administrator passwords, usernames, and kitchen staff accounts' },
   };
 
   const headerInfo = pageTitles[currentTab] || { title: 'Dashboard', subtitle: '' };
@@ -304,8 +302,6 @@ export const App: React.FC = () => {
               onRefresh={loadAllData}
             />
           )}
-
-          {currentTab === 'security' && <SecurityPage />}
         </main>
       </div>
 

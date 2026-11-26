@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   Settings, Save, CheckCircle2, Power, Store, Phone, MapPin,
   DollarSign, Layout, Upload, Eye, Clock, Sparkles, Image as ImageIcon,
-  QrCode, ShieldCheck, Copy, Check, Smartphone
+  QrCode, Copy, Check, Smartphone
 } from 'lucide-react';
 import { RestaurantSettings } from '../types';
 import { api } from '../services/api';
-import { SecurityPage } from './SecurityPage';
 
 interface SettingsPageProps {
   settings: RestaurantSettings | null;
@@ -15,7 +14,7 @@ interface SettingsPageProps {
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, onRefresh }) => {
   const [formData, setFormData] = useState<Partial<RestaurantSettings>>({});
-  const [activeTab, setActiveTab] = useState<'header' | 'general' | 'upi' | 'security'>('header');
+  const [activeTab, setActiveTab] = useState<'header' | 'general' | 'upi'>('header');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -136,18 +135,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, onRefresh 
           >
             <QrCode className="w-4 h-4" />
             UPI Gateway & QR
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('security')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition ${
-              activeTab === 'security'
-                ? 'bg-white text-brand-600 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4" />
-            Admin Security
           </button>
         </div>
       </div>
@@ -719,26 +706,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, onRefresh 
           </div>
         )}
 
-        {/* ===================== TAB 4: ADMIN SECURITY & CREDENTIALS ===================== */}
-        {activeTab === 'security' && (
-          <div className="space-y-6">
-            <SecurityPage />
-          </div>
-        )}
-
         {/* Global Save Button */}
-        {activeTab !== 'security' && (
-          <div className="flex justify-end pt-4 sticky bottom-4 z-20">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="flex items-center gap-2 px-8 py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-xl shadow-brand-600/30 transition active:scale-98 disabled:opacity-70"
-            >
-              <Save className="w-4 h-4" />
-              {isSaving ? 'Publishing Live...' : 'Save & Publish Live to Customer Website'}
-            </button>
-          </div>
-        )}
+        <div className="flex justify-end pt-4 sticky bottom-4 z-20">
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="flex items-center gap-2 px-8 py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-xl shadow-brand-600/30 transition active:scale-98 disabled:opacity-70"
+          >
+            <Save className="w-4 h-4" />
+            {isSaving ? 'Publishing Live...' : 'Save & Publish Live to Customer Website'}
+          </button>
+        </div>
       </form>
     </div>
   );

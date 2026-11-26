@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   LayoutDashboard, BellRing, UtensilsCrossed, Layers, History,
-  Users, Tag, BarChart3, Settings, ShieldCheck, Power, X, Volume2, QrCode
+  Users, Tag, BarChart3, Settings, Power, X, Volume2, QrCode
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { playTestSound, requestNotificationPermission } from '../utils/audio';
@@ -52,7 +52,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'coupons', label: 'Coupons & Promos', icon: Tag },
     { id: 'analytics', label: 'Reports & Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Restaurant Settings', icon: Settings },
-    { id: 'security', label: 'Admin Security', icon: ShieldCheck },
   ];
 
   const handleSelect = (id: string) => {
