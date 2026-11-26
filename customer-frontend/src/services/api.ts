@@ -18,18 +18,14 @@ export function getApiBaseUrl(): string {
       return `http://${host === 'localhost' || host === '127.0.0.1' ? 'localhost' : host}:8000/api`;
     }
 
-    // 2. If on Vercel deployment, check same-origin or default cloud
-    if (host.includes('vercel.app')) {
-      const custom = localStorage.getItem('bd_api_url');
-      if (custom && !custom.includes('localhost') && !custom.includes('onrender.com')) {
-        return custom.replace(/\/+$/, '');
-      }
-      return `${window.location.origin}/api`;
+    // 2. If hosted in cloud (Vercel / Render Static Site / Custom domain), use VITE_API_URL or Render backend
+    if (import.meta.env.VITE_API_URL) {
+      return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
     }
 
-    // 3. Custom override if manually set
+    // 3. Custom override if manually set (ignore stale localhost or deprecated domains)
     const custom = localStorage.getItem('bd_api_url');
-    if (custom && !custom.includes('basaveshwara-dabha-api.onrender.com')) {
+    if (custom && !custom.includes('localhost') && !custom.includes('127.0.0.1') && !custom.includes('basaveshwara-dabha-api.onrender.com')) {
       return custom.replace(/\/+$/, '');
     }
   }
